@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Taka Income Pro - Earn Money</title>
+    <title>টাকা ইনকাম প্রো - আয় করুন</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -28,7 +28,7 @@
     </script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap');
         :root { 
             --primary-color: #ff6347; /* টমেটু রঙ */
             --primary-color-rgb: 255, 99, 71; 
@@ -56,7 +56,7 @@
         
         * { box-sizing: border-box; }
         html, body { overscroll-behavior-y: contain; }
-        body { font-family: 'Noto Sans', sans-serif; margin: 0; padding: 20px 15px 100px 15px; background-color: var(--background-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Noto Sans Bengali', sans-serif; margin: 0; padding: 20px 15px 100px 15px; background-color: var(--background-color); color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
         
         #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: var(--background-color); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s ease; }
         #preloader i { font-size: 48px; color: var(--primary-color); animation: spin 1.5s linear infinite; }
@@ -124,7 +124,7 @@
         }
         @keyframes slideIn { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .close-button { color: #aaa; float: right; font-size: 28px; line-height: 1; font-weight: bold; cursor: pointer; }
-        .modal-content input, .modal-content select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Noto Sans', sans-serif; font-size: 16px; background-color: var(--background-color); color: var(--text-color); transition: border-color 0.2s, box-shadow 0.2s; }
+        .modal-content input, .modal-content select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Noto Sans Bengali', sans-serif; font-size: 16px; background-color: var(--background-color); color: var(--text-color); transition: border-color 0.2s, box-shadow 0.2s; }
         .modal-content input:focus, .modal-content select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2); }
         
         #bonus-tasks-list .bonus-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--background-color); border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); }
@@ -193,28 +193,28 @@
         <div id="preloader-percentage">0%</div>
     </div>
     <div id="preloader-footer">
-        <a href="#" target="_blank">Developed By SAKIB HOSSAIN</a>
+        <a href="#" target="_blank">সাকিব হোসেন দ্বারা তৈরি</a>
     </div>
     
-    <div id="ad-loader-overlay"><div class="loader"></div><span>Loading Ad...</span></div>
+    <div id="ad-loader-overlay"><div class="loader"></div><span>বিজ্ঞাপন লোড হচ্ছে...</span></div>
     
     <div class="container">
-        <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">Welcome!</h1></div>
-        <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
+        <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">স্বাগতম!</h1></div>
+        <div class="balance-card"><h3>আপনার ব্যালেন্স</h3><div class="amount" id="total-earning">৳0.00</div></div>
         <div class="stats-grid">
-            <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">Ads Watched</div></div>
-            <div class="stat-item"><i class="fa-solid fa-calendar-day bg-icon"></i><div class="icon"><i class="fa-solid fa-calendar-day"></i></div><div class="value" id="ads-today-count">0 / 15</div><div class="label">Today's Ads</div></div>
-            <div class="stat-item"><i class="fa-solid fa-users bg-icon"></i><div class="icon"><i class="fa-solid fa-users"></i></div><div class="value" id="referral-count">0</div><div class="label">Referrals</div></div>
+            <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">দেখা বিজ্ঞাপন</div></div>
+            <div class="stat-item"><i class="fa-solid fa-calendar-day bg-icon"></i><div class="icon"><i class="fa-solid fa-calendar-day"></i></div><div class="value" id="ads-today-count">0 / 15</div><div class="label">আজকের বিজ্ঞাপন</div></div>
+            <div class="stat-item"><i class="fa-solid fa-users bg-icon"></i><div class="icon"><i class="fa-solid fa-users"></i></div><div class="value" id="referral-count">0</div><div class="label">রেফারেল</div></div>
         </div>
-        <div class="card"><h3 class="card-title">Today's Task</h3><button class="action-button" id="watch-ad-button"><i class="fa-solid fa-play"></i><span>Watch Ad</span></button><button class="action-button secondary-button" id="join-channel-button"><i class="fa-brands fa-telegram"></i><span>Join Channel</span></button></div>
-        <div class="card"><h3 class="card-title">Weekly Activity</h3><div class="chart-container"><canvas id="activityChart"></canvas></div></div>
+        <div class="card"><h3 class="card-title">আজকের কাজ</h3><button class="action-button" id="watch-ad-button"><i class="fa-solid fa-play"></i><span>বিজ্ঞাপন দেখুন</span></button><button class="action-button secondary-button" id="join-channel-button"><i class="fa-brands fa-telegram"></i><span>চ্যানেলে যোগ দিন</span></button></div>
+        <div class="card"><h3 class="card-title">সাপ্তাহিক কার্যকলাপ</h3><div class="chart-container"><canvas id="activityChart"></canvas></div></div>
     </div>
     <div class="nav-bar">
-        <button class="nav-button" onclick="showModal('withdrawModal', this)"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></button>
-        <button class="nav-button" onclick="showModal('historyModal', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></button>
-        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>Invite</span></button>
-        <button class="nav-button" onclick="showModal('supportModal', this)"><i class="fa-solid fa-headset"></i><span>Support</span></button>
-        <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
+        <button class="nav-button" onclick="showModal('withdrawModal', this)"><i class="fa-solid fa-money-bill-transfer"></i><span>উত্তোলন</span></button>
+        <button class="nav-button" onclick="showModal('historyModal', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>ইতিহাস</span></button>
+        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>আমন্ত্রণ</span></button>
+        <button class="nav-button" onclick="showModal('supportModal', this)"><i class="fa-solid fa-headset"></i><span>সহায়তা</span></button>
+        <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>বোনাস</span></button>
     </div>
     
     <!-- Updated Welcome Modal -->
@@ -231,35 +231,35 @@
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
-            <h3 class="card-title">Withdraw Funds</h3>
+            <h3 class="card-title">উত্তোলন</h3>
             <p id="min-withdraw-text"></p>
             <form id="withdraw-form">
                 <select id="method" name="method" required>
-                    <option value="" disabled selected>Select Payment Method</option>
+                    <option value="" disabled selected>পেমেন্ট পদ্ধতি নির্বাচন করুন</option>
                 </select>
-                <input type="text" id="account-number" placeholder="Enter Bkash/Nagad Number or Binance UID" required>
-                <input type="number" step="0.01" id="withdraw-amount" placeholder="Amount in BDT" required>
+                <input type="text" id="account-number" placeholder="বিকাশ/নগদ নম্বর লিখুন" required>
+                <input type="number" step="0.01" id="withdraw-amount" placeholder="টাকার পরিমাণ লিখুন" required>
                 <button type="submit" class="action-button" id="withdraw-submit-button">
-                    <span class="button-text">Submit Request</span>
+                    <span class="button-text">অনুরোধ জমা দিন</span>
                     <div class="spinner" style="display: none;"></div>
                 </button>
             </form>
         </div>
     </div>
     
-    <div id="supportModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('supportModal')">&times;</span><h3 class="card-title">Support</h3><p>For any help or questions, please contact the admin directly. We are here to assist you!</p><button class="action-button" id="admin-contact-button"><i class="fa-brands fa-telegram"></i><span>Contact Admin</span></button></div></div>
-    <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
-    <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button></div></div>
-    <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards!</p><div id="bonus-tasks-list"></div></div></div>
+    <div id="supportModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('supportModal')">&times;</span><h3 class="card-title">সহায়তা</h3><p>কোনো সাহায্য বা প্রশ্নের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন। আমরা আপনাকে সাহায্য করতে প্রস্তুত!</p><button class="action-button" id="admin-contact-button"><i class="fa-brands fa-telegram"></i><span>অ্যাডমিনের সাথে যোগাযোগ</span></button></div></div>
+    <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">উত্তোলনের ইতিহাস</h3><div id="history-list"></div></div></div>
+    <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">বন্ধুদের আমন্ত্রণ করুন</h3><p>আপনার রেফারেল লিঙ্কটি বন্ধুদের সাথে শেয়ার করুন এবং একসাথে আয় করুন। প্রত্যেক সফল রেফারেলের জন্য পুরস্কার পাবেন।</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>লিঙ্ক কপি করুন</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>লিঙ্ক শেয়ার করুন</span></button></div></div>
+    <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">বোনাস কাজ</h3><p style="text-align: center; margin-bottom: 20px;">এই এককালীন কাজগুলো সম্পূর্ণ করে অতিরিক্ত পুরস্কার আয় করুন!</p><div id="bonus-tasks-list"></div></div></div>
     
     <!-- Multi Account Warning (Bengali) -->
     <div id="multiAccountModal" class="modal">
         <div class="modal-content">
             <h3 class="card-title" style="color: #ff4444;">সতর্কতা</h3>
             <p style="font-size: 15px; line-height: 1.7;">
-                একাধিক অ্যাকাউন্ট অনুমোদিত নয়।<br>
+                একাধিক অ্যাকাউন্ট অনুমোদিত নয়।<br>
                 এই ডিভাইসে শুধুমাত্র একটি টেলিগ্রাম অ্যাকাউন্ট ব্যবহার করা যাবে।<br>
-                দয়া করে আপনার মূল অ্যাকাউন্ট দিয়ে চালিয়ে যান।
+                দয়া করে আপনার মূল অ্যাকাউন্ট দিয়ে চালিয়ে যান।
             </p>
         </div>
     </div>
@@ -277,7 +277,7 @@
             DAILY_AD_LIMIT: 15,
             MINIMUM_WITHDRAWAL: 500, // ৳500
             COOLDOWN_MINUTES: 30,
-            withdrawalMethods: ['Binance UID', 'Bkash', 'Nagad'],
+            withdrawalMethods: ['Bkash', 'Nagad'],
             firebase: {
                 apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
                 authDomain: "st-project-taka-kamao.firebaseapp.com",
@@ -299,8 +299,8 @@
                 { id: 'bonus_06', title: 'Twitter Follow করুন', link: 'https://twitter.com/shakibexplainer', icon: 'fa-brands fa-twitter', reward: 15, duration: 10 }
             ],
             welcomeNotice: {
-                title: "Welcome!",
-                message: "Tomato এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৩০ টাকা\nপ্রতি রেফারে ১০০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
+                title: "স্বাগতম!",
+                message: "টমেটোতে আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৩০ টাকা\nপ্রতি রেফারে ১০০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
             }
         };
 
@@ -351,7 +351,7 @@
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
             allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${config.DAILY_AD_LIMIT}`;
-            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
+            allDOMElements.minWithdrawText.textContent = `সর্বনিম্ন উত্তোলন ৳${config.MINIMUM_WITHDRAWAL}।`;
             
             clearInterval(cooldownInterval);
             const watchAdButton = allDOMElements.watchAdButton;
@@ -359,39 +359,39 @@
                 watchAdButton.disabled = true;
                 const updateTimer = () => {
                     const remaining = new Date(state.cooldownUntil) - new Date();
-                    if (remaining <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; state.adsWatchedToday = 0; saveState(); updateUI(); safeTgAlert(`Your break is over! Please change your IP address before starting.`); } 
-                    else { const minutes = Math.floor((remaining / 1000 / 60) % 60); const seconds = Math.floor((remaining / 1000) % 60); watchAdButton.querySelector('span').textContent = `Break: ${minutes}m ${seconds}s`; }
+                    if (remaining <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; state.adsWatchedToday = 0; saveState(); updateUI(); safeTgAlert(`আপনার বিরতি শেষ! পরবর্তী রাউন্ড শুরু করার জন্য আপনার আইপি ঠিকানা পরিবর্তন করুন।`); } 
+                    else { const minutes = Math.floor((remaining / 1000 / 60) % 60); const seconds = Math.floor((remaining / 1000) % 60); watchAdButton.querySelector('span').textContent = `বিরতি: ${minutes}মি ${seconds}সে`; }
                 };
                 cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
             } else {
                 watchAdButton.disabled = state.adsWatchedToday >= config.DAILY_AD_LIMIT;
-                watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= config.DAILY_AD_LIMIT ? 'Take a Break' : 'Watch Ad';
+                watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= config.DAILY_AD_LIMIT ? 'বিরতি নিন' : 'বিজ্ঞাপন দেখুন';
             }
             watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled && state.adsWatchedToday < config.DAILY_AD_LIMIT);
             updateChart();
         }
         
         async function watchAd() {
-            if (state.lastUsedIp && !state.cooldownUntil) {
+            if (tg && state.lastUsedIp && !state.cooldownUntil) {
                  const newIp = await getIpAddress();
-                 if (newIp === state.lastUsedIp) { safeTgAlert('Please change your IP address to start the next round. Turn airplane mode on and off.'); return; } 
+                 if (newIp === state.lastUsedIp) { safeTgAlert('পরবর্তী রাউন্ড শুরু করার জন্য আপনার আইপি ঠিকানা পরিবর্তন করুন। এয়ারপ্লেন মোড অন-অফ করুন।'); return; } 
                  else { state.lastUsedIp = null; saveState(); }
             }
             allDOMElements.adLoaderOverlay.style.display = 'flex';
             const adFunction = window[`show_${config.MONETAG_ZONE_ID}`];
-            if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
+            if (typeof adFunction !== 'function') { safeTgAlert('বিজ্ঞাপন লোড হতে পারেনি। আবার চেষ্টা করুন।'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
             adFunction().then(() => {
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
-                let alertMessage = `Ad watched! You have ${config.DAILY_AD_LIMIT - state.adsWatchedToday} ads left.`;
+                let alertMessage = `বিজ্ঞাপন দেখা হয়েছে! আপনার ${config.DAILY_AD_LIMIT - state.adsWatchedToday}টি বিজ্ঞাপন বাকি আছে।`;
                 if (state.adsWatchedToday >= config.DAILY_AD_LIMIT) {
                     const cdDate = new Date(); cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
                     state.cooldownUntil = cdDate.toISOString(); state.lastUsedIp = currentIpAddress;
-                    alertMessage = `You have completed your tasks! Please take a ${config.COOLDOWN_MINUTES}-minute break.`;
+                    alertMessage = `আপনার কাজ সম্পূর্ণ! ${config.COOLDOWN_MINUTES}-মিনিটের বিরতি নিন।`;
                 }
                 saveState(); updateUI();
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
                 safeTgAlert(alertMessage);
-            }).catch(e => { console.error("Monetag Ad Error:", e); safeTgAlert('Ad could not be completed. Please try again.'); })
+            }).catch(e => { console.error("Monetag Ad Error:", e); safeTgAlert('বিজ্ঞাপন সম্পূর্ণ হতে পারেনি। আবার চেষ্টা করুন।'); })
             .finally(() => { allDOMElements.adLoaderOverlay.style.display = 'none'; });
         }
         
@@ -405,12 +405,12 @@
             const method = withdrawForm.elements.method.value;
             const accountNumber = withdrawForm.elements['account-number'].value;
             
-            if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
-            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
+            if (amount > state.totalEarning) return safeTgAlert('আপনার পর্যাপ্ত ব্যালেন্স নেই।');
+            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`সর্বনিম্ন উত্তোলনের পরিমাণ ৳${config.MINIMUM_WITHDRAWAL}।`);
 
             buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
-            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
-            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> ৳${amount.toFixed(2)}`;
+            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'টেস্ট', last_name: 'ইউজার', username: 'testuser', id: '12345' };
+            const message = `<b>💰 নতুন উত্তোলন অনুরোধ 💰</b>\n\n👤 <b>ব্যবহারকারী:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>ব্যবহারকারী আইডি:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>পদ্ধতি:</b> ${escapeHTML(method)}\n🔢 <b>অ্যাকাউন্ট:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>পরিমাণ:</b> ৳${amount.toFixed(2)}`;
             try {
                 const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
                 const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
@@ -420,10 +420,10 @@
                     const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
                     state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
                     saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
-                    safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed within 2 hours.');
+                    safeTgAlert('আপনার উত্তোলন অনুরোধ পাঠানো হয়েছে এবং অপেক্ষমাণ। ২ ঘণ্টার মধ্যে প্রক্রিয়া করা হবে।');
                     safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
                 } else { throw new Error(JSON.stringify(results)); }
-            } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
+            } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('আপনার অনুরোধ পাঠাতে ব্যর্থ। পরে আবার চেষ্টা করুন।'); } 
             finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
         }
         
@@ -431,7 +431,7 @@
             let changed = false;
             state.withdrawalHistory.forEach(item => {
                 if (item.status === 'Pending' && new Date().getTime() > item.pendingUntil) {
-                    item.status = 'Success';
+                    item.status = 'সফল';
                     changed = true;
                 }
             });
@@ -446,7 +446,7 @@
         function renderHistory() {
             checkPendingWithdrawals();
             const { historyListEl } = allDOMElements;
-            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; return; }
+            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">কোনো উত্তোলন ইতিহাস পাওয়া যায়নি।</p>'; return; }
             historyListEl.innerHTML = state.withdrawalHistory.map(item => `
                 <div class="history-item">
                     <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
@@ -457,26 +457,26 @@
         function renderBonusTasks() {
             const { bonusTasksListEl } = allDOMElements;
             bonusTasksListEl.innerHTML = '';
-            if (config.bonusTasks.length === 0) { bonusTasksListEl.innerHTML = '<p class="no-history">No bonus tasks are available right now.</p>'; return; }
+            if (config.bonusTasks.length === 0) { bonusTasksListEl.innerHTML = '<p class="no-history">কোনো বোনাস কাজ উপলব্ধ নেই।</p>'; return; }
             config.bonusTasks.forEach(task => {
                 const isCompleted = state.completedBonusTasks.includes(task.id);
                 const item = document.createElement('div');
                 item.className = 'bonus-item';
-                item.innerHTML = `<div class="details"><span class="title"><i class="${task.icon || 'fa-solid fa-gift'}"></i>${escapeHTML(task.title)}</span><span class="reward"><i class="fa-solid fa-gift"></i>+ ৳${task.reward.toFixed(2)}</span></div><button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Completed' : 'Claim'}</button>`;
+                item.innerHTML = `<div class="details"><span class="title"><i class="${task.icon || 'fa-solid fa-gift'}"></i>${escapeHTML(task.title)}</span><span class="reward"><i class="fa-solid fa-gift"></i>+ ৳${task.reward.toFixed(2)}</span></div><button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'সম্পূর্ণ' : 'দাবি করুন'}</button>`;
                 if (!isCompleted) { item.querySelector('.claim-button').addEventListener('click', (e) => handleBonusTask(task, e.target)); }
                 bonusTasksListEl.appendChild(item);
             });
         }
 
         function handleBonusTask(task, button) {
-            button.disabled = true; button.textContent = 'Processing...';
+            button.disabled = true; button.textContent = 'প্রক্রিয়া চলছে...';
             safeTgAction(tg => tg.openLink(task.link));
             setTimeout(() => {
                 if (state.completedBonusTasks.includes(task.id)) return;
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
-                saveState(); updateUI(); button.textContent = 'Completed';
-                safeTgAlert(`Bonus of ৳${task.reward.toFixed(2)} added successfully!`);
+                saveState(); updateUI(); button.textContent = 'সম্পূর্ণ';
+                safeTgAlert(`৳${task.reward.toFixed(2)} বোনাস সফলভাবে যোগ করা হয়েছে!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
         }
@@ -491,8 +491,8 @@
         }
         function closeModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; if (modalId !== 'welcomeModal') { document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active')); } }
         function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
-        function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
-        function shareReferralLink() { const link = getReferralLink(); const text = `Earn money by watching ads! Join using my link:\n${link}`; safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); }
+        function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('রেফারেল লিঙ্ক কপি হয়েছে!')).catch(() => safeTgAlert('লিঙ্ক কপি করা যায়নি।')); }
+        function shareReferralLink() { const link = getReferralLink(); const text = `বিজ্ঞাপন দেখে আয় করুন! আমার লিঙ্ক ব্যবহার করে যোগ দিন:\n${link}`; safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); }
         
         let myChart; function updateChart() { 
             try {
@@ -504,9 +504,9 @@
                 myChart = new Chart(ctx, { 
                     type: 'bar', 
                     data: { 
-                        labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 
+                        labels: ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'], 
                         datasets: [{ 
-                            label: 'Ads Watched', 
+                            label: 'দেখা বিজ্ঞাপন', 
                             data: state.weeklyActivity, 
                             backgroundColor: 'rgba(var(--primary-color-rgb), 0.2)', 
                             borderColor: 'rgb(var(--primary-color-rgb))', 
@@ -547,7 +547,7 @@
             const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
             await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
 
-            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus next time you open the app.`;
+            const message = `🎉 অভিনন্দন! ${currentUser.first_name} (@${currentUser.username}) আপনার লিঙ্ক ব্যবহার করে যোগ দিয়েছে। পরবর্তীবার অ্যাপ খুললে আপনার বোনাস পাবেন।`;
             await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
         }
 
@@ -566,7 +566,7 @@
                 state.totalEarning += bonus;
                 state.rewardedReferrals = totalReferrals;
                 saveState();
-                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)!`);
+                safeTgAlert(`${newReferrals}টি নতুন রেফারেলের জন্য ৳${bonus.toFixed(2)} বোনাস পেয়েছেন!`);
             }
         }
 
@@ -630,14 +630,14 @@
                 if (state.firstTime) {
                     state.totalEarning += config.JOIN_BONUS;
                     state.firstTime = false;
-                    safeTgAlert(`Welcome! You've received a join bonus of ৳${config.JOIN_BONUS.toFixed(2)}!`);
+                    safeTgAlert(`স্বাগতম! আপনি ৳${config.JOIN_BONUS.toFixed(2)} জয়েন বোনাস পেয়েছেন!`);
                     saveState();
                 }
 
                 const currentUserId = tg ? tg.initDataUnsafe?.user?.id : null;
 
-                // === MULTI-ACCOUNT CHECK (ONLY USER ID) ===
-                if (currentUserId) {
+                // === MULTI-ACCOUNT CHECK (ONLY IN TELEGRAM) ===
+                if (tg && currentUserId) {
                     if (!state.originalUserId) {
                         state.originalUserId = currentUserId;
                         await saveState();
@@ -647,12 +647,14 @@
                     }
                 }
 
-                currentIpAddress = await getIpAddress();
-                const isMultiAccountIP = await checkIpInDB(currentIpAddress);
-                const isNewUser = !(localStorage.getItem('userIdentified'));
+                if (tg) {
+                    currentIpAddress = await getIpAddress();
+                    const isMultiAccountIP = await checkIpInDB(currentIpAddress);
+                    const isNewUser = !(localStorage.getItem('userIdentified'));
 
-                if (isMultiAccountIP && isNewUser) { document.getElementById('multiAccountModal').style.display = 'flex'; return; }
-                if (!isMultiAccountIP) { saveIpToDB(currentIpAddress); localStorage.setItem('userIdentified', 'true'); }
+                    if (isMultiAccountIP && isNewUser) { document.getElementById('multiAccountModal').style.display = 'flex'; return; }
+                    if (!isMultiAccountIP) { saveIpToDB(currentIpAddress); localStorage.setItem('userIdentified', 'true'); }
+                }
                 
                 await handleReferral();
                 await processReferralRewards();
@@ -660,9 +662,9 @@
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
-                const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
+                const user = tg ? tg.initDataUnsafe?.user : { first_name: 'ব্যবহারকারী', photo_url: null };
                 if (user?.first_name) {
-                    allDOMElements.greetingEl.textContent = `Welcome, ${escapeHTML(user.first_name)}!`;
+                    allDOMElements.greetingEl.textContent = `স্বাগতম, ${escapeHTML(user.first_name)}!`;
                     if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
                     else { allDOMElements.profilePicEl.innerHTML = `<span>${escapeHTML(user.first_name.charAt(0))}</span>`; }
                 }
