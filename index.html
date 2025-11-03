@@ -371,7 +371,7 @@
             DAILY_AD_LIMIT: 15,
             MINIMUM_WITHDRAWAL: 500, // ৳500
             MIN_REFERRALS_FOR_WITHDRAW: 15,
-            COOLDOWN_MINUTES: 30,
+            COOLDOWN_MINUTES: 1440,
             withdrawalMethods: ['Bkash', 'Nagad'],
             firebase: {
                 apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
@@ -450,9 +450,14 @@
             if (state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
                 watchAdButton.disabled = true;
                 const updateTimer = () => {
-                    const remaining = new Date(state.cooldownUntil) - new Date();
-                    if (remaining <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; saveState(); updateUI(); safeTgAlert(`Your break is over!`); } 
-                    else { const minutes = Math.floor((remaining / 1000 / 60) % 60); const seconds = Math.floor((remaining / 1000) % 60); watchAdButton.querySelector('span').textContent = `Break: ${minutes}m ${seconds}s`; }
+                    const remainingMs = new Date(state.cooldownUntil) - new Date();
+                    if (remainingMs <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; saveState(); updateUI(); safeTgAlert(`Your break is over!`); } 
+                    else { 
+                        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                        watchAdButton.querySelector('span').textContent = `Break: ${hours}h ${minutes}m ${seconds}s`; 
+                    }
                 };
                 cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
             } else {
@@ -505,9 +510,10 @@
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
                 let alertMessage = `Ad watched! You have ${config.DAILY_AD_LIMIT - state.adsWatchedToday} ads left.`;
                 if (state.adsWatchedToday >= config.DAILY_AD_LIMIT) {
-                    const cdDate = new Date(); cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
+                    const cdDate = new Date();
+                    cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
                     state.cooldownUntil = cdDate.toISOString();
-                    alertMessage = `You have completed your tasks! Please take a ${config.COOLDOWN_MINUTES}-minute break.`;
+                    alertMessage = `You have completed your tasks! Please take a 24-hour break.`;
                 }
                 saveState(); updateUI();
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
