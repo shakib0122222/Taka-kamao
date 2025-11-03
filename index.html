@@ -39,6 +39,7 @@
             --text-light: #6E6E73; 
             --border-color: #E5E5EA; 
             --glass-bg: rgba(240, 242, 245, 0.8); 
+            --tomato-color: #ff6347; /* টমেটু কালার */
         }
         [data-theme="dark"] { 
             --primary-color: #2ED158; /* ডার্ক থিমের জন্য সবুজ */
@@ -50,6 +51,7 @@
             --text-light: #8E8E93; 
             --border-color: #3A3A3C; 
             --glass-bg: rgba(28, 28, 30, 0.8); 
+            --tomato-color: #ff6347;
         }
         
         * { box-sizing: border-box; }
@@ -97,9 +99,30 @@
         .nav-button.active, .nav-button:hover { color: var(--primary-color); background-color: rgba(var(--primary-color-rgb), 0.1); }
         .nav-button i { font-size: 20px; }
         
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: flex-end; animation: fadeIn 0.3s ease-out; }
-        .modal-content { background-color: var(--card-background); padding: 20px; border-radius: 20px 20px 0 0; width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; animation: slideIn 0.3s ease-out; max-height: 80vh; overflow-y: auto;}
-        @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            align-items: center; 
+            justify-content: center; 
+            animation: fadeIn 0.3s ease-out; 
+        }
+        .modal-content { 
+            background-color: var(--card-background); 
+            padding: 24px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            box-sizing: border-box; 
+            animation: slideIn 0.3s ease-out; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        @keyframes slideIn { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .close-button { color: #aaa; float: right; font-size: 28px; line-height: 1; font-weight: bold; cursor: pointer; }
         .modal-content input, .modal-content select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Noto Sans', sans-serif; font-size: 16px; background-color: var(--background-color); color: var(--text-color); transition: border-color 0.2s, box-shadow 0.2s; }
         .modal-content input:focus, .modal-content select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2); }
@@ -129,6 +152,36 @@
         .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--primary-color); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         #multiAccountModal .modal-content { text-align: center; border-radius: 20px; max-height: initial;}
         #multiAccountModal { align-items: center; justify-content: center; }
+
+        /* Welcome Modal Special Style */
+        #welcomeModal .modal-content {
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 24px;
+            max-width: 380px;
+        }
+        #welcomeModal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--primary-color);
+        }
+        #welcomeModal p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 16px 0;
+            color: var(--text-color);
+        }
+        #welcomeModal .action-button {
+            background-color: var(--tomato-color) !important;
+            font-weight: 700;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+        }
+        #welcomeModal .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -161,8 +214,15 @@
         <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
     </div>
     
-    <!-- All Modals -->
-    <div id="welcomeModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('welcomeModal')">&times;</span><h3 id="welcome-title" class="card-title" style="text-align:center;"></h3><p id="welcome-message" style="line-height: 1.6; font-size: 15px; text-align: center; white-space: pre-wrap; margin: 15px 0;"></p><button class="action-button" onclick="closeModal('welcomeModal')">I Understand</button></div></div>
+    <!-- Updated Welcome Modal -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('welcomeModal')">&times;</span>
+            <h3 id="welcome-title" class="card-title"></h3>
+            <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
+            <button class="action-button" onclick="closeModal('welcomeModal')">I Understand</button>
+        </div>
+    </div>
     
     <!-- পরিবর্তিত: Withdraw Modal -->
     <div id="withdrawModal" class="modal">
@@ -188,7 +248,7 @@
     <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
     <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button></div></div>
     <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards!</p><div id="bonus-tasks-list"></div></div></div>
-    <div id="multiAccountModal" class="modal"><div class="modal-content"><h3 class="card-title" style="text-align:center;">⚠️ Warning</h3><p>Multiple accounts are not allowed. Only one Telegram account can be used on this device. Please use your original account to continue.</p></div></div>
+    <div id="multiAccountModal" class="modal"><div class="modal-content"><h3 class="card-title" style="text-align:center;">Warning</h3><p>Multiple accounts are not allowed. Only one Telegram account can be used on this device. Please use your original account to continue.</p></div></div>
 
     <script>
         // --- CONFIGURATION (MERGED) ---
@@ -230,9 +290,8 @@
             ],
             welcomeNotice: {
                 title: "Welcome!",
-                message: orange 🍊 এ আপনাকে স্বাগতম!আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন। 🎁 জয়েন বোনাস 50 টাকা💰 প্রতি বিজ্ঞাপনে আয় 30 টাকা। 💸 প্রতি রেফারে 100 টাকা বোনাস।📱 সর্বনিম্ন উত্তোলন: 500৳, বিকাশ/নগদে 500৳ ⚠️ উত্তোলনের জন্য ন্যূনতম 15 টি রেফার প্রয়োজন। ✅
-
-   }
+                message: "Tomato এ আপনাকে স্বাগতম!আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন। 🎁 জয়েন বোনাস 50 টাকা💰 প্রতি বিজ্ঞাপনে আয় 30 টাকা। 💸 প্রতি রেফারে 100 টাকা বোনাস।📱 সর্বনিম্ন উত্তোলন: 500৳, বিকাশ/নগদে 500৳ ⚠️ উত্তোলনের জন্য ন্যূনতম 15 টি রেফার প্রয়োজন। ✅"
+            }
         };
 
         // --- MAIN APP LOGIC ---
