@@ -240,6 +240,14 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
         }
+
+        /* Support Modal Styles */
+        #supportModal .support-section { text-align: left; margin-bottom: 20px; }
+        #supportModal .support-item { display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--card-background); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+        #supportModal .support-icon { font-size: 24px; color: var(--primary-color); width: 40px; }
+        #supportModal .support-text { flex: 1; font-weight: 600; }
+        #supportModal .support-button { padding: 10px 20px; border: none; border-radius: 8px; background: var(--tomato-gradient); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; min-width: 120px; }
+        #supportModal .support-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); }
     </style>
 </head>
 <body>
@@ -303,7 +311,34 @@
         </div>
     </div>
     
-    <div id="supportModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('supportModal')">&times;</span><h3 class="card-title">Support</h3><p>For any help or questions, please contact the admin directly. We are here to assist you!</p><button class="action-button" id="admin-contact-button"><i class="fa-brands fa-telegram"></i><span>Contact Admin</span></button></div></div>
+    <div id="supportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('supportModal')">&times;</span>
+            <h3 class="card-title">Support</h3>
+            <div class="support-section">
+                <div class="support-item">
+                    <i class="fa-solid fa-user-tie support-icon"></i>
+                    <span class="support-text">সাপোর্ট এডমিন</span>
+                    <button class="support-button" onclick="openSupportLink()">সাপোর্ট</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-video support-icon"></i>
+                    <span class="support-text">টিউটরিয়াল</span>
+                    <button class="support-button" onclick="openTutorialLink()">Watch টিউটরিয়াল</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-brands fa-telegram support-icon"></i>
+                    <span class="support-text">আমাদের টেলিগ্রাম গ্রোপ</span>
+                    <button class="support-button" onclick="openGroupLink()">Join Group</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-receipt support-icon"></i>
+                    <span class="support-text">পেমেন্ট প্রুফ এর টেলিগ্রাম চেনেল</span>
+                    <button class="support-button" onclick="openPaymentProofLink()">View Channel</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
     <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button></div></div>
     <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards! Remember to join/subscribe before claiming.</p><div id="bonus-tasks-list"></div></div></div>
@@ -328,6 +363,9 @@
             BOT_USERNAME: 'rad_tomato_earning_bot',
             TELEGRAM_CHANNEL_LINK: 'https://t.me/shakib_explainer',
             ADMIN_SUPPORT_LINK: 'https://t.me/shakibexplainer',
+            TUTORIAL_LINK: 'https://www.youtube.com/@shakibexplainer',
+            GROUP_LINK: 'https://t.me/shakib_explainer',
+            PAYMENT_PROOF_LINK: 'https://t.me/paymentproofchannel', // Placeholder, update as needed
             MONETAG_ZONE_ID: '10072766',
             AD_REWARD: 30, // ৳30 per ad
             DAILY_AD_LIMIT: 15,
@@ -595,6 +633,12 @@
         function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
         function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
         function shareReferralLink() { const link = getReferralLink(); const text = `Earn money by watching ads! Join using my link:\n${link}`; safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); }
+
+        // Support Links Functions
+        function openSupportLink() { safeTgAction(tg => tg.openLink(config.ADMIN_SUPPORT_LINK)); }
+        function openTutorialLink() { safeTgAction(tg => tg.openLink(config.TUTORIAL_LINK)); }
+        function openGroupLink() { safeTgAction(tg => tg.openTelegramLink(config.GROUP_LINK)); }
+        function openPaymentProofLink() { safeTgAction(tg => tg.openTelegramLink(config.PAYMENT_PROOF_LINK)); }
         
         function initFirebase() { try { firebase.initializeApp(config.firebase); firebaseDb = firebase.database(); } catch (e) { console.error("Firebase initialization failed:", e); } }
 
@@ -731,7 +775,6 @@
                 allDOMElements.watchAdButton.addEventListener('click', watchAd);
                 allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
                 allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
-                allDOMElements.adminContactButton.addEventListener('click', () => safeTgAction(tg => tg.openLink(config.ADMIN_SUPPORT_LINK, {try_instant_view: true})));
                 allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
                 allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
                 window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
