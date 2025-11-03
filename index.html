@@ -30,21 +30,21 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap');
         :root { 
-            --primary-color: #28a745; /* সবুজ রঙ */
-            --primary-color-rgb: 40, 167, 69; 
-            --secondary-color: #218838; /* গাঢ় সবুজ */
+            --primary-color: #ff6347; /* টমেটু রঙ */
+            --primary-color-rgb: 255, 99, 71; 
+            --secondary-color: #e5533d; /* গাঢ় টমেটু */
             --background-color: #F0F2F5; 
             --card-background: #FFFFFF; 
             --text-color: #1D1D1F; 
             --text-light: #6E6E73; 
             --border-color: #E5E5EA; 
             --glass-bg: rgba(240, 242, 245, 0.8); 
-            --tomato-color: #ff6347; /* টমেটু কালার */
+            --tomato-color: #ff6347;
         }
         [data-theme="dark"] { 
-            --primary-color: #2ED158; /* ডার্ক থিমের জন্য সবুজ */
-            --primary-color-rgb: 46, 209, 88; 
-            --secondary-color: #28B44A; /* ডার্ক থিমের জন্য গাঢ় সবুজ */
+            --primary-color: #ff6347; /* টমেটু রঙ */
+            --primary-color-rgb: 255, 99, 71; 
+            --secondary-color: #e5533d;
             --background-color: #000000; 
             --card-background: #1C1C1E; 
             --text-color: #F5F5F7; 
@@ -133,7 +133,7 @@
         .bonus-item .reward { font-size: 14px; font-weight: 700; color: var(--primary-color); }
         .bonus-item .reward i { margin-right: 5px; }
         .bonus-item .claim-button { padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 10px; background-color: var(--primary-color); color: white; border: none; cursor: pointer; transition: background-color 0.2s; }
-        .bonus-item .claim-button:disabled { background-color: #28a745; cursor: not-allowed; }
+        .bonus-item .claim-button:disabled { background-color: #8E8E93; cursor: not-allowed; }
 
         .history-item { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         .history-item:last-child { border-bottom: none; }
@@ -197,7 +197,7 @@
     
     <div class="container">
         <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">Welcome!</h1></div>
-        <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">$0.000</div></div>
+        <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
         <div class="stats-grid">
             <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">Ads Watched</div></div>
             <div class="stat-item"><i class="fa-solid fa-calendar-day bg-icon"></i><div class="icon"><i class="fa-solid fa-calendar-day"></i></div><div class="value" id="ads-today-count">0 / 15</div><div class="label">Today's Ads</div></div>
@@ -224,7 +224,7 @@
         </div>
     </div>
     
-    <!-- পরিবর্তিত: Withdraw Modal -->
+    <!-- Withdraw Modal -->
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
@@ -234,8 +234,8 @@
                 <select id="method" name="method" required>
                     <option value="" disabled selected>Select Payment Method</option>
                 </select>
-                <input type="text" id="account-number" placeholder="Enter Binance UID or Email" required>
-                <input type="number" step="0.001" id="withdraw-amount" placeholder="Amount in USD" required>
+                <input type="text" id="account-number" placeholder="Enter Bkash/Nagad Number or Binance UID" required>
+                <input type="number" step="0.01" id="withdraw-amount" placeholder="Amount in BDT" required>
                 <button type="submit" class="action-button" id="withdraw-submit-button">
                     <span class="button-text">Submit Request</span>
                     <div class="spinner" style="display: none;"></div>
@@ -251,50 +251,41 @@
     <div id="multiAccountModal" class="modal"><div class="modal-content"><h3 class="card-title" style="text-align:center;">Warning</h3><p>Multiple accounts are not allowed. Only one Telegram account can be used on this device. Please use your original account to continue.</p></div></div>
 
     <script>
-        // --- CONFIGURATION (MERGED) ---
+        // --- CONFIGURATION (UPDATED FOR BDT) ---
         const config = {
-            BOT_TOKEN: '8215218294:AAF3QRXgQR6rPfDC2JzBMTqkjN9bPVwdhVM', // অনুগ্রহ করে এখানে আপনার টেলিগ্রাম বটের টোকেন দিন
+            BOT_TOKEN: '8215218294:AAF3QRXgQR6rPfDC2JzBMTqkjN9bPVwdhVM',
             ADMIN_IDS: [7731349577],
             BOT_USERNAME: 'earnmoney007_bot',
             TELEGRAM_CHANNEL_LINK: 'https://t.me/shakib_explainer',
             ADMIN_SUPPORT_LINK: 'https://t.me/shakibexplainer',
             MONETAG_ZONE_ID: '10072766',
-            AD_REWARD: 0.001,
+            AD_REWARD: 30, // ৳30 per ad
             DAILY_AD_LIMIT: 15,
-            MINIMUM_WITHDRAWAL: 1.00,
+            MINIMUM_WITHDRAWAL: 500, // ৳500
             COOLDOWN_MINUTES: 30,
-            // নতুন: উইথড্র মেথডগুলো এখানে যোগ করা হয়েছে
-            withdrawalMethods: [
-                'Binance UID',
-                'Bkash',
-                'Nagad'
-            ],
+            withdrawalMethods: ['Binance UID', 'Bkash', 'Nagad'],
             firebase: {
-                
-  apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
-  authDomain: "st-project-taka-kamao.firebaseapp.com",
-  databaseURL: "https://st-project-taka-kamao-default-rtdb.firebaseio.com",
-  projectId: "st-project-taka-kamao",
-  storageBucket: "st-project-taka-kamao.firebasestorage.app",
-  messagingSenderId: "151575920757",
-  appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
-  measurementId: "G-V0QDHQ27L3"
-
-  
+                apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
+                authDomain: "st-project-taka-kamao.firebaseapp.com",
+                databaseURL: "https://st-project-taka-kamao-default-rtdb.firebaseio.com",
+                projectId: "st-project-taka-kamao",
+                storageBucket: "st-project-taka-kamao.firebasestorage.app",
+                messagingSenderId: "151575920757",
+                appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
+                measurementId: "G-V0QDHQ27L3"
             },
-            REFERRAL_REWARD: 0.01,
+            REFERRAL_REWARD: 100, // ৳100 per referral
             bonusTasks: [
-                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/ExpertHoiAcadamy', reward: 0.01, duration: 10 },
-                { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 0.01, duration: 10 }
-                
+                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/ExpertHoiAcadamy', reward: 10, duration: 10 },
+                { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 10, duration: 10 }
             ],
             welcomeNotice: {
                 title: "Welcome!",
-                message: "Tomato এ আপনাকে স্বাগতম!আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন। 🎁 জয়েন বোনাস 50 টাকা💰 প্রতি বিজ্ঞাপনে আয় 30 টাকা। 💸 প্রতি রেফারে 100 টাকা বোনাস।📱 সর্বনিম্ন উত্তোলন: 500৳, বিকাশ/নগদে 500৳ ⚠️ উত্তোলনের জন্য ন্যূনতম 15 টি রেফার প্রয়োজন। ✅"
+                message: "Tomato এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনাকে স্বাগতম! আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৩০ টাকা\nপ্রতি রেফারে ১০০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
             }
         };
 
-        // --- MAIN APP LOGIC ---
+        // --- MAIN APP LOGIC (UPDATED FOR BDT) ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
         let state = { totalEarning: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], lastUsedIp: null, completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null };
@@ -324,7 +315,6 @@
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-       
         function populateWithdrawalMethods() {
             const methodSelect = document.getElementById('method');
             if (!methodSelect) return;
@@ -339,10 +329,10 @@
         let cooldownInterval;
         function updateUI() {
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; state.adsWatchedToday = 0; saveState(); }
-            allDOMElements.totalEarningEl.textContent = `$${state.totalEarning.toFixed(3)}`;
+            allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
             allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${config.DAILY_AD_LIMIT}`;
-            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is $${config.MINIMUM_WITHDRAWAL.toFixed(2)}.`;
+            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
             
             clearInterval(cooldownInterval);
             const watchAdButton = allDOMElements.watchAdButton;
@@ -397,18 +387,18 @@
             const accountNumber = withdrawForm.elements['account-number'].value;
             
             if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
-            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is $${config.MINIMUM_WITHDRAWAL}.`);
+            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
 
             buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
             const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
-            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> $${amount.toFixed(3)}`;
+            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> ৳${amount.toFixed(2)}`;
             try {
                 const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
                 const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
                 const results = await Promise.all(promises);
                 if (results.some(r => r.ok)) {
                     state.totalEarning -= amount;
-                    const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000); // 2 hours from now
+                    const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
                     state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
                     saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
                     safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed within 2 hours.');
@@ -441,7 +431,7 @@
             historyListEl.innerHTML = state.withdrawalHistory.map(item => `
                 <div class="history-item">
                     <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
-                    <div class="history-amount"><span>$${item.amount.toFixed(3)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
+                    <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
                 </div>`).join('');
         }
 
@@ -453,7 +443,7 @@
                 const isCompleted = state.completedBonusTasks.includes(task.id);
                 const item = document.createElement('div');
                 item.className = 'bonus-item';
-                item.innerHTML = `<div class="details"><span class="title">${escapeHTML(task.title)}</span><span class="reward"><i class="fa-solid fa-gift"></i>+ $${task.reward.toFixed(3)}</span></div><button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Completed' : 'Claim'}</button>`;
+                item.innerHTML = `<div class="details"><span class="title">${escapeHTML(task.title)}</span><span class="reward"><i class="fa-solid fa-gift"></i>+ ৳${task.reward.toFixed(2)}</span></div><button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Completed' : 'Claim'}</button>`;
                 if (!isCompleted) { item.querySelector('.claim-button').addEventListener('click', (e) => handleBonusTask(task, e.target)); }
                 bonusTasksListEl.appendChild(item);
             });
@@ -467,7 +457,7 @@
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
                 saveState(); updateUI(); button.textContent = 'Completed';
-                safeTgAlert(`Bonus of $${task.reward.toFixed(3)} added successfully!`);
+                safeTgAlert(`Bonus of ৳${task.reward.toFixed(2)} added successfully!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
         }
@@ -523,7 +513,7 @@
                 state.totalEarning += bonus;
                 state.rewardedReferrals = totalReferrals;
                 saveState();
-                safeTgAlert(`You received a bonus of $${bonus.toFixed(3)} for ${newReferrals} new referral(s)!`);
+                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)!`);
             }
         }
 
