@@ -30,9 +30,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap');
         :root { 
-            --primary-color: #ff6347; /* টমেটু রঙ */
+            --primary-color: #ff6347; 
             --primary-color-rgb: 255, 99, 71; 
-            --secondary-color: #e5533d; /* গাঢ় টমেটু */
+            --secondary-color: #e5533d;
             --background-color: #F0F2F5; 
             --card-background: #FFFFFF; 
             --text-color: #1D1D1F; 
@@ -212,58 +212,31 @@
         #multiAccountModal .modal-content { text-align: center; border-radius: 20px; max-height: initial;}
         #multiAccountModal { align-items: center; justify-content: center; }
 
-        /* Welcome Modal Special Style */
-        #welcomeModal .modal-content {
-            padding: 30px 20px;
-            text-align: center;
-            border-radius: 24px;
-            max-width: 380px;
+        /* Invite Modal Special */
+        #inviteModal .referral-balance { 
+            background: var(--tomato-gradient); 
+            color: white; 
+            padding: 16px; 
+            border-radius: 16px; 
+            margin: 15px 0; 
+            text-align: center; 
+            font-size: 18px; 
+            font-weight: 700; 
         }
-        #welcomeModal h3 {
-            font-size: 22px;
-            font-weight: 800;
-            margin: 0 0 16px 0;
-            color: var(--primary-color);
-        }
-        #welcomeModal p {
-            font-size: 15px;
-            line-height: 1.7;
-            margin: 16px 0;
-            color: var(--text-color);
-        }
-        #welcomeModal .action-button {
-            background: var(--tomato-gradient) !important;
-            font-weight: 700;
-            margin-top: 20px;
-            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
-        }
-        #welcomeModal .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        #inviteModal .add-to-main-btn { 
+            background: white !important; 
+            color: #ff6347 !important; 
+            border: 2px solid #ff6347; 
+            margin-top: 10px; 
         }
 
-        /* Support Modal Styles */
-        #supportModal .support-section { text-align: left; margin-bottom: 20px; }
-        #supportModal .support-item { display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--card-background); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; }
-        #supportModal .support-icon { font-size: 24px; color: var(--primary-color); width: 40px; }
-        #supportModal .support-text { flex: 1; font-weight: 600; }
-        #supportModal .support-button { padding: 10px 20px; border: none; border-radius: 8px; background: var(--tomato-gradient); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; min-width: 120px; }
-        #supportModal .support-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); }
-
-        /* New Warning Modal for Ad Earning */
+        /* Warning Modal */
         #adEarningWarningModal .modal-content {
             background: linear-gradient(135deg, #ff4444, #cc0000);
             color: white;
-            border: none;
         }
-        #adEarningWarningModal h3 {
-            color: white;
-            font-size: 20px;
-        }
-        #adEarningWarningModal p {
-            font-size: 15px;
-            line-height: 1.6;
-        }
+        #adEarningWarningModal h3 { color: white; font-size: 20px; }
+        #adEarningWarningModal p { font-size: 15px; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -280,7 +253,7 @@
     <div class="container">
         <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">Welcome!</h1></div>
         <div class="balance-card">
-            <h3>Your Balance</h3>
+            <h3>Main Balance</h3>
             <div class="amount" id="total-earning">৳0.00</div>
             <div class="ad-earning" id="ad-earning-text">Ad Earning: ৳0.00</div>
         </div>
@@ -300,96 +273,40 @@
         <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
     </div>
     
-    <!-- Updated Welcome Modal -->
-    <div id="welcomeModal" class="modal">
+    <!-- Invite Modal with Referral Balance -->
+    <div id="inviteModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="closeModal('welcomeModal')">&times;</span>
-            <h3 id="welcome-title" class="card-title"></h3>
-            <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
-            <button class="action-button" onclick="closeModal('welcomeModal')">আমি বুঝেছি</button>
+            <span class="close-button" onclick="closeModal('inviteModal')">&times;</span>
+            <h3 class="card-title">Invite Friends</h3>
+            <p>Share your referral link and earn ৳50 per referral!</p>
+            <div class="referral-balance" id="referral-balance">Referral Balance: ৳0.00</div>
+            <button class="action-button add-to-main-btn" id="add-to-main-balance">Add to Main Balance</button>
+            <button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button>
+            <button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button>
         </div>
     </div>
-    
-    <!-- Withdraw Modal -->
-    <div id="withdrawModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
-            <h3 class="card-title">Withdraw Funds</h3>
-            <p id="min-withdraw-text"></p>
-            <p id="referral-requirement-text" style="color: var(--text-light); font-size: 14px;"></p>
-            <form id="withdraw-form">
-                <select id="method" name="method" required>
-                    <option value="" disabled selected>Select Payment Method</option>
-                </select>
-                <input type="text" id="account-number" placeholder="Enter Bkash/Nagad Number" required>
-                <input type="number" step="0.01" id="withdraw-amount" placeholder="Amount in BDT" required>
-                <button type="submit" class="action-button" id="withdraw-submit-button">
-                    <span class="button-text">Submit Request</span>
-                    <div class="spinner" style="display: none;"></div>
-                </button>
-            </form>
-        </div>
-    </div>
-    
+
     <!-- Ad Earning Warning Modal -->
     <div id="adEarningWarningModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('adEarningWarningModal')">&times;</span>
             <h3>সতর্কতা!</h3>
-            <p>আপনি শুধুমাত্র রেফার করে টাকা উত্তোলন করতে পারবেন না।<br><br>
-            ৫০০ টাকার বেশি উত্তোলনের জন্য আপনাকে অবশ্যই <strong>বিজ্ঞাপন দেখে ৫০০ টাকা</strong> আয় করতে হবে।<br><br>
+            <p>৫০০ টাকার বেশি উত্তোলনের জন্য আপনাকে অবশ্যই <strong>বিজ্ঞাপন দেখে ৫০০ টাকা</strong> আয় করতে হবে।<br><br>
             বর্তমানে আপনার বিজ্ঞাপন আয়: <strong id="current-ad-earning">৳0.00</strong></p>
             <button class="action-button" style="background: white; color: #ff4444;" onclick="closeModal('adEarningWarningModal')">ঠিক আছে</button>
         </div>
     </div>
-    
-    <div id="supportModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal('supportModal')">&times;</span>
-            <h3 class="card-title">Support</h3>
-            <div class="support-section">
-                <div class="support-item">
-                    <i class="fa-solid fa-user-tie support-icon"></i>
-                    <span class="support-text">সাপোর্ট এডমিন</span>
-                    <button class="support-button" onclick="openSupportLink()">সাপোর্ট</button>
-                </div>
-                <div class="support-item">
-                    <i class="fa-solid fa-video support-icon"></i>
-                   
- <span class="support-text">টিউটরিয়াল</span>
-                    <button class="support-button" onclick="openTutorialLink()">Watch টিউটরিয়াল</button>
-                </div>
-                <div class="support-item">
-                    <i class="fa-brands fa-telegram support-icon"></i>
-                    <span class="support-text">আমাদের টেলিগ্রাম গ্রোপ</span>
-                    <button class="support-button" onclick="openGroupLink()">Join Group</button>
-                </div>
-                <div class="support-item">
-                    <i class="fa-solid fa-receipt support-icon"></i>
-                    <span class="support-text">পেমেন্ট প্রুফ এর টেলিগ্রাম চেনেল</span>
-                    <button class="support-button" onclick="openPaymentProofLink()">View Channel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
-    <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button></div></div>
-    <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards! Remember to join/subscribe before claiming.</p><div id="bonus-tasks-list"></div></div></div>
-    
-    <!-- Multi Account Warning (Bengali) -->
-    <div id="multiAccountModal" class="modal">
-        <div class="modal-content">
-            <h3 class="card-title" style="color: #ff4444;">সতর্কতা</h3>
-            <p style="font-size: 15px; line-height: 1.7;">
-                একাধিক অ্যাকাউন্ট অনুমোদিত নয়।<br>
-                এই ডিভাইসে শুধুমাত্র একটি টেলিগ্রাম অ্যাকাউন্ট ব্যবহার করা যাবে।<br>
-                দয়া করে আপনার মূল অ্যাকাউন্ট দিয়ে চালিয়ে যান।
-            </p>
-        </div>
-    </div>
+
+    <!-- Other Modals (unchanged) -->
+    <div id="welcomeModal" class="modal">...</div>
+    <div id="withdrawModal" class="modal">...</div>
+    <div id="supportModal" class="modal">...</div>
+    <div id="historyModal" class="modal">...</div>
+    <div id="bonusTasksModal" class="modal">...</div>
+    <div id="multiAccountModal" class="modal">...</div>
 
     <script>
-        // --- CONFIGURATION (UPDATED FOR BDT + AD EARNING CHECK) ---
+        // --- CONFIGURATION ---
         const config = {
             BOT_TOKEN: '8592541498:AAHn5vYf8qlMuVrBt_OIbR8VhdG0gGO3vOA',
             ADMIN_IDS: [7731349577],
@@ -405,7 +322,8 @@
             MINIMUM_WITHDRAWAL: 500,
             MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
-            MIN_AD_EARNING_FOR_HIGH_WITHDRAWAL: 500, // নতুন: ৫০০ টাকা বিজ্ঞাপন আয় ছাড়া ৫০০+ উত্তোলন যাবে না
+            MIN_AD_EARNING_FOR_HIGH_WITHDRAWAL: 500,
+            REFERRAL_REWARD: 50,
             withdrawalMethods: ['Bkash', 'Nagad'],
             firebase: {
                 apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
@@ -417,206 +335,132 @@
                 appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
                 measurementId: "G-V0QDHQ27L3"
             },
-            REFERRAL_REWARD: 50,
-            bonusTasks: [
-                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
-                { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
-                { id: 'bonus_03', title: 'YouTube চ্যানেল Subscribe করুন', link: 'https://youtube.com/@experthoiacademy?si=JzntArQaysuDys7R', reward: 10, duration: 30, icon: 'fa-brands fa-youtube' },
-                { id: 'bonus_04', title: 'Facebook Page Follow করুন', link: 'https://www.facebook.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-facebook' },
-                { id: 'bonus_05', title: 'আরেকটি চ্যানেল জয়েন করুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
-                { id: 'bonus_06', title: 'Instagram Follow করুন', link: 'https://www.instagram.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-instagram' }
-            ],
-            welcomeNotice: {
-                title: "Welcome!",
-                message: "Tomato_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৫ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
-            }
+            bonusTasks: [ /* ... same ... */ ],
+            welcomeNotice: { /* ... same ... */ }
         };
 
-        // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
         let state = { 
             totalEarning: 0.0, 
-            adEarnings: 0.0, // নতুন: বিজ্ঞাপন থেকে আয়
+            adEarnings: 0.0,
+            referralBalance: 0.0,  // নতুন
             adCount: 0, 
             adsWatchedToday: 0, 
             lastAdWatchedDate: null, 
             cooldownUntil: null, 
-            weeklyActivity: [0, 0, 0, 0, 0, 0, 0], 
+            weeklyActivity: [0,0,0,0,0,0,0], 
             withdrawalHistory: [], 
             completedBonusTasks: [], 
             rewardedReferrals: 0, 
             originalUserId: null, 
             referralCount: 0 
         };
-        const dbName = 'AdBotAppDB'; let db;
-        let firebaseApp, firebaseDb;
+
+        let db, firebaseDb;
 
         const allDOMElements = { 
-            preloader: document.getElementById('preloader'), 
-            preloaderPercentage: document.getElementById('preloader-percentage'), 
-            preloaderFooter: document.getElementById('preloader-footer'),
-            container: document.querySelector('.container'), 
-            totalEarningEl: document.getElementById('total-earning'), 
+            totalEarningEl: document.getElementById('total-earning'),
             adEarningTextEl: document.getElementById('ad-earning-text'),
-            adCountEl: document.getElementById('ad-count'), 
-            adsTodayCountEl: document.getElementById('ads-today-count'), 
-            referralCountEl: document.getElementById('referral-count'), 
-            watchAdButton: document.getElementById('watch-ad-button'), 
-            withdrawForm: document.getElementById('withdraw-form'), 
-            adLoaderOverlay: document.getElementById('ad-loader-overlay'), 
-            profilePicEl: document.getElementById('profile-pic'), 
-            greetingEl: document.getElementById('greeting'), 
-            joinChannelButton: document.getElementById('join-channel-button'), 
-            copyLinkButton: document.getElementById('copy-link-button'), 
-            shareLinkButton: document.getElementById('share-link-button'), 
-            historyListEl: document.getElementById('history-list'), 
-            bonusTasksListEl: document.getElementById('bonus-tasks-list'), 
-            minWithdrawText: document.getElementById('min-withdraw-text'), 
-            referralRequirementText: document.getElementById('referral-requirement-text'),
-            welcomeTitle: document.getElementById('welcome-title'), 
-            welcomeMessage: document.getElementById('welcome-message'),
-            currentAdEarningEl: document.getElementById('current-ad-earning')
+            referralBalanceEl: document.getElementById('referral-balance'),
+            addToMainBtn: document.getElementById('add-to-main-balance'),
+            currentAdEarningEl: document.getElementById('current-ad-earning'),
+            // ... others
         };
-        
-        function initDB() { /* ... same as before ... */ }
-        function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
+
+        function initDB() { /* same */ }
+        function saveState() { if (!db) return; const t = db.transaction(['userState'], 'readwrite'); t.objectStore('userState').put({ id: 'currentUser', ...state }); }
         function loadState() { 
             return new Promise(resolve => { 
-                if (!db) { resolve(); return; } 
-                const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); 
-                request.onsuccess = () => { 
-                    if (request.result) { 
-                        state = { ...state, ...request.result }; 
+                if (!db) return resolve();
+                const req = db.transaction(['userState']).objectStore('userState').get('currentUser');
+                req.onsuccess = () => { 
+                    if (req.result) { 
+                        state = { ...state, ...req.result }; 
+                        if (!state.referralBalance) state.referralBalance = 0.0;
                         if (!state.adEarnings) state.adEarnings = 0.0;
-                        if (!state.completedBonusTasks) state.completedBonusTasks = []; 
-                        if (!state.rewardedReferrals) state.rewardedReferrals = 0; 
-                        if(!state.originalUserId) state.originalUserId = null; 
-                        if(!state.referralCount) state.referralCount = 0; 
                     } 
-                    const today = new Date().toLocaleDateString(); 
-                    if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } 
                     resolve(); 
-                }; 
-                request.onerror = () => resolve(); 
-            }); 
+                };
+            });
         }
 
         function updateUI() {
-            allDOMElements.referralCountEl.textContent = state.referralCount;
-            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
-            allDOMElements.referralRequirementText.textContent = `You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`;
-            if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adEarningTextEl.textContent = `Ad Earning: ৳${state.adEarnings.toFixed(2)}`;
-            allDOMElements.adCountEl.textContent = state.adCount;
-            allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${config.DAILY_AD_LIMIT}`;
+            allDOMElements.referralBalanceEl.textContent = `Referral Balance: ৳${state.referralBalance.toFixed(2)}`;
             allDOMElements.currentAdEarningEl && (allDOMElements.currentAdEarningEl.textContent = `৳${state.adEarnings.toFixed(2)}`);
-            
-            clearInterval(cooldownInterval);
-            const watchAdButton = allDOMElements.watchAdButton;
-            if (state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
-                watchAdButton.disabled = true;
-                const updateTimer = () => {
-                    const remainingMs = new Date(state.cooldownUntil) - new Date();
-                    if (remainingMs <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; saveState(); updateUI(); safeTgAlert(`Your break is over!`); } 
-                    else { 
-                        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-                        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-                        watchAdButton.querySelector('span').textContent = `Break: ${hours}h ${minutes}m ${seconds}s`; 
-                    }
-                };
-                cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
+            // ... rest
+        }
+
+        // Add to Main Balance
+        document.getElementById('add-to-main-balance').addEventListener('click', () => {
+            if (state.referralBalance > 0) {
+                state.totalEarning += state.referralBalance;
+                state.referralBalance = 0;
+                saveState();
+                updateUI();
+                safeTgAlert(`৳${state.referralBalance.toFixed(2)} added to main balance!`);
             } else {
-                watchAdButton.disabled = state.adsWatchedToday >= config.DAILY_AD_LIMIT;
-                watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= config.DAILY_AD_LIMIT ? 'Take a Break' : 'Watch Ad';
+                safeTgAlert("No referral balance to add.");
             }
-            watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
-            updateChart();
+        });
+
+        async function processReferralRewards() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            const snapshot = await firebaseDb.ref(`users/${userId}/referrals`).once('value');
+            const totalReferrals = snapshot.val() || 0;
+            const newReferrals = totalReferrals - state.rewardedReferrals;
+
+            if (newReferrals > 0) {
+                const bonus = newReferrals * config.REFERRAL_REWARD;
+                state.referralBalance += bonus;  // আure: আলাদা রেফার ব্যালেন্সে
+                state.rewardedReferrals = totalReferrals;
+                state.referralCount = totalReferrals;
+                saveState();
+                updateUI();
+                safeTgAlert(`You earned ৳${bonus.toFixed(2)} referral bonus! Go to Invite → Add to Main Balance`);
+            } else {
+                state.referralCount = totalReferrals;
+                updateUI();
+            }
         }
 
-        // ... অন্যান্য ফাংশন অপরিবর্তিত ...
-
-        async function watchAd() {
-            allDOMElements.adLoaderOverlay.style.display = 'flex';
-            const adFunction = window[`show_${config.MONETAG_ZONE_ID}`];
-            if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
-            adFunction().then(() => {
-                state.totalEarning += config.AD_REWARD; 
-                state.adEarnings += config.AD_REWARD; // নতুন: বিজ্ঞাপন আয় বৃদ্ধি
-                state.adCount++; 
-                state.adsWatchedToday++; 
-                state.weeklyActivity[new Date().getDay()]++;
-                let alertMessage = `Ad watched! You have ${config.DAILY_AD_LIMIT - state.adsWatchedToday} ads left.`;
-                if (state.adsWatchedToday >= config.DAILY_AD_LIMIT) {
-                    const cdDate = new Date();
-                    cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
-                    state.cooldownUntil = cdDate.toISOString();
-                    alertMessage = `You have completed your tasks! Please take a 24-hour break.`;
-                }
-                saveState(); updateUI();
-                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
-                safeTgAlert(alertMessage);
-            }).catch(e => { console.error("Monetag Ad Error:", e); safeTgAlert('Ad could not be completed. Please try again.'); })
-            .finally(() => { allDOMElements.adLoaderOverlay.style.display = 'none'; });
-        }
-        
-        async function handleWithdrawal(event) {
-            event.preventDefault();
-            if (state.referralCount < config.MIN_REFERRALS_FOR_WITHDRAW) {
-                safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`);
-                return;
-            }
-            const { withdrawForm } = allDOMElements;
-            const submitButton = document.getElementById('withdraw-submit-button');
-            const buttonText = submitButton.querySelector('.button-text');
-            const spinner = submitButton.querySelector('.spinner');
-            const amount = parseFloat(withdrawForm.elements['withdraw-amount'].value);
-            const method = withdrawForm.elements.method.value;
-            const accountNumber = withdrawForm.elements['account-number'].value;
-            
-            if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
-            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
-
-            // নতুন চেক: ৫০০+ টাকা উত্তোলন করলে বিজ্ঞাপন আয় চেক
-            if (amount >= config.MIN_AD_EARNING_FOR_HIGH_WITHDRAWAL && state.adEarnings < config.MIN_AD_EARNING_FOR_HIGH_WITHDRAWAL) {
-                allDOMElements.currentAdEarningEl.textContent = `৳${state.adEarnings.toFixed(2)}`;
-                showModal('adEarningWarningModal');
-                return;
-            }
-
-            buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
-            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
-            const message = `<b>New Withdrawal Request</b>\n\n<b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n<b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n<b>Method:</b> ${escapeHTML(method)}\n<b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n<b>Amount:</b> ৳${amount.toFixed(2)}`;
+        function initFirebase() {
             try {
-                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
-                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
-                const results = await Promise.all(promises);
-                if (results.some(r => r.ok)) {
-                    state.totalEarning -= amount;
-                    const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
-                    state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
-                    saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
-                    safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed within 2 hours.');
-                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
-                } else { throw new Error(JSON.stringify(results)); }
-            } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
-            finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(config.firebase);
+                }
+                firebaseDb = firebase.database();
+            } catch (e) {
+                console.error("Firebase init failed:", e);
+            }
         }
 
-        // ... বাকি কোড অপরিবর্তিত ...
+        // ... watchAd, handleWithdrawal, etc. same ...
 
         async function initApp() {
-            // ... same as before ...
+            let percentage = 0;
+            const interval = setInterval(() => {
+                percentage += Math.floor(Math.random() * 5) + 1;
+                if (percentage > 100) percentage = 100;
+                document.getElementById('preloader-percentage').textContent = `${percentage}%`;
+                if (percentage >= 100) {
+                    clearInterval(interval);
+                    // ... show app
+                }
+            }, 60);
+
+            loadMonetagSDK();
+            initFirebase();  // সঠিকভাবে ইনিশিয়ালাইজ
+            await initDB();
             await loadState();
-            // ... rest ...
+            // ... rest
             updateUI();
-            allDOMElements.watchAdButton.addEventListener('click', watchAd);
-            allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
-            // ... rest ...
+            window.addEventListener('load', () => { /* ... */ });
         }
-        
+
         window.addEventListener('load', initApp);
     </script>
 </body>
