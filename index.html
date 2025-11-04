@@ -315,7 +315,7 @@
             flex: 1;
             cursor: pointer;
             border-radius: 12px;
-            padding: 15px 10px;
+            padding: 20px 10px;
             border: 2px solid var(--border-color);
             background: var(--card-background);
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -348,7 +348,7 @@
         }
         .method-logo {
             width: 80px;
-            height: 60px;
+            height: 50px;
             object-fit: contain;
             margin-bottom: 5px;
         }
@@ -555,7 +555,7 @@
             config.withdrawalMethods.forEach(method => {
                 const label = document.createElement('label');
                 label.className = 'payment-method-option';
-                const imgSrc = method === 'Bkash' ? 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/main/bkash-logo-horizontal-bangla-mobile-banking-app-icon-free-png.png' : 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/main/nagad-logo-horizontal-mobile-banking-app-icon-on-transparent-background-free-png.png';
+                const imgSrc = method === 'Bkash' ? 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/ecb6035769c61e0a4f9ce7b1fbf8d8e6c898ba7b/bkash-logo-horizontal-bangla-mobile-banking-app-icon-free-png.png' : 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/bde0d49816eabb2a6bda41d9873652b7072a5a27/nagad-logo-horizontal-mobile-banking-app-icon-on-transparent-background-free-png.png';
                 const alt = method;
                 label.innerHTML = `
                     <input type="radio" name="method" value="${method}" required>
