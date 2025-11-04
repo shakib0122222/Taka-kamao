@@ -298,6 +298,29 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
+        /* Withdraw Modal Note Style - Highlighted Note */
+        .withdraw-note {
+            background: rgba(var(--primary-color-rgb), 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            position: relative;
+        }
+        .withdraw-note::before {
+            content: '📝';
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .withdraw-note.highlight {
+            box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+
         /* Withdraw Modal Payment Methods Styles */
         .payment-method-header {
             font-size: 16px;
@@ -405,7 +428,7 @@
             <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
             <h3 class="card-title">Withdraw Funds</h3>
             <p id="min-withdraw-text"></p>
-            <p id="referral-requirement-text" style="color: var(--text-light); font-size: 14px;"></p>
+            <div id="referral-requirement-note" class="withdraw-note highlight"></div>
             <form id="withdraw-form">
                 <h4 class="payment-method-header">Payment Method</h4>
                 <div id="payment-methods-container" class="payment-methods-container"></div>
@@ -536,7 +559,7 @@
             withdrawForm: document.getElementById('withdraw-form'), adLoaderOverlay: document.getElementById('ad-loader-overlay'), profilePicEl: document.getElementById('profile-pic'), 
             greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), adminContactButton: document.getElementById('admin-contact-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
-            bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementText: document.getElementById('referral-requirement-text'),
+            bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
             welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
         };
         
@@ -573,7 +596,7 @@
             allDOMElements.referralCountEl.textContent = state.referralCount;
             allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
             allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
-            allDOMElements.referralRequirementText.textContent = `You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`;
+            allDOMElements.referralRequirementNote.innerHTML = `<strong>📝 নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
@@ -778,7 +801,7 @@
             if (modalId === 'historyModal') renderHistory();
             if (modalId === 'bonusTasksModal') renderBonusTasks();
             if (modalId === 'inviteModal') updateUI();
-            if (modalId === 'withdrawModal') populateWithdrawalMethods();
+            if (modalId === 'withdrawModal') { populateWithdrawalMethods(); updateUI(); } // Update note when modal opens
             const modal = document.getElementById(modalId);
             if(modal) modal.style.display = 'flex';
         }
