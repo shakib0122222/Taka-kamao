@@ -596,7 +596,7 @@
             allDOMElements.referralCountEl.textContent = state.referralCount;
             allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
             allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
-            allDOMElements.referralRequirementNote.innerHTML = `<strong>📝 নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
+            allDOMElements.referralRequirementNote.innerHTML = `<strong>নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
