@@ -436,6 +436,7 @@
             MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100, // Minimum 100 BDT to add to main balance
+            MIN_AD_EARNING_FOR_WITHDRAW: 500, // Minimum ad earning in main balance for withdraw
             withdrawalMethods: ['Bkash', 'Nagad'],
             firebase: {
                 apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
@@ -600,6 +601,12 @@
             const amount = parseFloat(withdrawForm.elements['withdraw-amount'].value);
             const method = withdrawForm.elements.method.value;
             const accountNumber = withdrawForm.elements['account-number'].value;
+            
+            // Check if main balance (from ads) is at least 500
+            if (state.totalEarning < config.MIN_AD_EARNING_FOR_WITHDRAW) {
+                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন। রেগুলার ads দেখে ইনকাম করুন এবং আপনার অ্যাকাউন্টকে সক্রিয় রাখুন!');
+                return;
+            }
             
             if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
             if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
