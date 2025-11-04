@@ -639,7 +639,7 @@
         function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
         function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
         function shareReferralLink() { 
-            
+            const link = getReferralLink();
             const text = `🍅💸 Tomato ইনকাম বট 💸🍅\nআমি প্রতিদিন Tomato বট থেকে ইনকাম করছি! 😎\nতুমিও চাইলে আজই শুরু করতে পারো 💰\n👇 এখানে জয়েন করো 👇\n🔗 ${link}`; 
             safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
         }
