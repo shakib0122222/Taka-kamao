@@ -704,11 +704,12 @@
 
         function addToMainBalance() {
             if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
-                state.totalEarning += state.referralBalance;
+                const amountToAdd = state.referralBalance;
+                state.totalEarning += amountToAdd;
                 state.referralBalance = 0;
                 saveState();
                 updateUI();
-                safeTgAlert(`Referral balance of ৳${state.referralBalance.toFixed(2)} added to main balance!`);
+                safeTgAlert(`Referral balance of ৳${amountToAdd.toFixed(2)} added to main balance!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } else {
                 safeTgAlert(`Minimum ${config.REFERRAL_MIN_ADD} BDT required to add to main balance. Current: ৳${state.referralBalance.toFixed(2)}`);
