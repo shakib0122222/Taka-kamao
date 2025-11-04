@@ -288,6 +288,15 @@
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 15px;
         }
+        .referral-card .action-button {
+            background: white;
+            color: black;
+            font-weight: 700;
+        }
+        .referral-card .action-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -315,7 +324,7 @@
     <div class="nav-bar">
         <button class="nav-button" onclick="showModal('withdrawModal', this)"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></button>
         <button class="nav-button" onclick="showModal('historyModal', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></button>
-        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>Invite</span></button>
+        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>Refer</span></button>
         <button class="nav-button" onclick="showModal('supportModal', this)"><i class="fa-solid fa-headset"></i><span>Support</span></button>
         <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
     </div>
