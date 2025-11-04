@@ -389,7 +389,7 @@
                 <h4>Referral Balance</h4>
                 <div class="balance-amount" id="referral-balance-text">৳0.00</div>
                 <p class="threshold-note">Minimum ৳100 required to add to main balance</p>
-                <button class="action-button" id="add-to-main-balance" style="display: none; margin-top: 10px;"><i class="fa-solid fa-plus"></i><span>Add to Main Balance</span></button>
+                <button class="action-button" id="add-to-main-balance"><i class="fa-solid fa-plus"></i><span>Add to Main Balance</span></button>
             </div>
             <button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button>
             <button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button>
@@ -494,7 +494,6 @@
         function updateUI() {
             allDOMElements.referralCountEl.textContent = state.referralCount;
             allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
-            allDOMElements.addToMainBalance.style.display = state.referralBalance >= config.REFERRAL_MIN_ADD ? 'block' : 'none';
             allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
             allDOMElements.referralRequirementText.textContent = `You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`;
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
@@ -704,15 +703,15 @@
 
         function addToMainBalance() {
             if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
-                const amountToAdd = state.referralBalance;
-                state.totalEarning += amountToAdd;
+                const addedAmount = state.referralBalance;
+                state.totalEarning += state.referralBalance;
                 state.referralBalance = 0;
                 saveState();
                 updateUI();
-                safeTgAlert(`Referral balance of ৳${amountToAdd.toFixed(2)} added to main balance!`);
+                safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } else {
-                safeTgAlert(`Minimum ${config.REFERRAL_MIN_ADD} BDT required to add to main balance. Current: ৳${state.referralBalance.toFixed(2)}`);
+                safeTgAlert(`Minimum ৳${config.REFERRAL_MIN_ADD} required to add to main balance. Current: ৳${state.referralBalance.toFixed(2)}`);
             }
         }
 
