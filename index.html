@@ -340,7 +340,7 @@
         </div>
     </div>
     <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
-    <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button></div></div>
+    <div id="inviteModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('inviteModal')">&times;</span><h3 class="card-title">Invite Friends</h3><p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p><p id="referral-balance-text">Referral Balance: ৳0.00</p><button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button><button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button><button class="action-button" id="add-to-main-balance" style="display: none;"><i class="fa-solid fa-plus"></i><span>Add to Main Balance</span></button></div></div>
     <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards! Remember to join/subscribe before claiming.</p><div id="bonus-tasks-list"></div></div></div>
     
     <!-- Multi Account Warning (Bengali) -->
@@ -401,7 +401,7 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0 };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
 
@@ -413,12 +413,12 @@
             greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), adminContactButton: document.getElementById('admin-contact-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementText: document.getElementById('referral-requirement-text'),
-            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message')
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
         };
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -438,6 +438,8 @@
         let cooldownInterval;
         function updateUI() {
             allDOMElements.referralCountEl.textContent = state.referralCount;
+            allDOMElements.referralBalanceText.textContent = `Referral Balance: ৳${state.referralBalance.toFixed(2)}`;
+            allDOMElements.addToMainBalance.style.display = state.referralBalance > 0 ? 'block' : 'none';
             allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
             allDOMElements.referralRequirementText.textContent = `You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`;
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
@@ -632,6 +634,7 @@
             if (buttonEl) buttonEl.classList.add('active');
             if (modalId === 'historyModal') renderHistory();
             if (modalId === 'bonusTasksModal') renderBonusTasks();
+            if (modalId === 'inviteModal') updateUI();
             const modal = document.getElementById(modalId);
             if(modal) modal.style.display = 'flex';
         }
@@ -642,6 +645,17 @@
             const link = getReferralLink();
             const text = `🍅💸 Tomato ইনকাম বট 💸🍅\nআমি প্রতিদিন Tomato বট থেকে ইনকাম করছি! 😎\nতুমিও চাইলে আজই শুরু করতে পারো 💰\n👇 এখানে জয়েন করো 👇\n🔗 ${link}`; 
             safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
+        }
+
+        function addToMainBalance() {
+            if (state.referralBalance > 0) {
+                state.totalEarning += state.referralBalance;
+                state.referralBalance = 0;
+                saveState();
+                updateUI();
+                safeTgAlert('Referral balance added to main balance!');
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+            }
         }
 
         // Support Links Functions
@@ -683,11 +697,11 @@
 
             if (newReferrals > 0) {
                 const bonus = newReferrals * config.REFERRAL_REWARD;
-                state.totalEarning += bonus;
+                state.referralBalance += bonus;
                 state.rewardedReferrals = totalReferrals;
                 state.referralCount = totalReferrals;
                 saveState();
-                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)!`);
+                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)! It has been added to your Referral Balance.`);
             } else {
                 state.referralCount = totalReferrals;
             }
@@ -787,6 +801,7 @@
                 allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
                 allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
                 allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
+                allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
                 window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
 
                 safeTgAction(tg => {
