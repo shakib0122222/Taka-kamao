@@ -634,6 +634,12 @@
             welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
         };
         
+        function calculateDaysLeft(expiryDate) {
+            const diffMs = new Date(expiryDate) - new Date();
+            if (diffMs <= 0) return 0;
+            return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+        }
+        
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
         function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
@@ -675,7 +681,8 @@
             // VIP Expiry Check & Countdown
             if (state.isVIP && state.vipExpiry) {
                 const expiryDate = new Date(state.vipExpiry);
-                if (new Date() >= expiryDate) {
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft <= 0) {
                     state.isVIP = false;
                     state.vipPackage = null;
                     state.vipExpiry = null;
@@ -683,7 +690,6 @@
                     saveState();
                     safeTgAlert('Your VIP membership has expired. Upgrade again to continue enjoying benefits!');
                 } else {
-                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                     state.vipDaysLeft = daysLeft;
                     const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
                     if (vipStatusEl) {
@@ -926,16 +932,18 @@
             guide.style.display = 'none';
             selectedPackage = null;
 
-            if (state.isVIP && state.vipExpiry && new Date() < new Date(state.vipExpiry)) {
+            if (state.isVIP && state.vipExpiry) {
                 const expiryDate = new Date(state.vipExpiry);
-                const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--vip-gold);">
-                    <i class="fa-solid fa-crown" style="font-size: 48px; margin-bottom: 20px;"></i>
-                    <h3>You are a VIP ${state.vipPackage.name} Member!</h3>
-                    <p style="font-size: 16px;">Expires: ${new Date(state.vipExpiry).toLocaleDateString()}</p>
-                    <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${daysLeft} days left!</p>
-                </div>`;
-                return;
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft > 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--vip-gold);">
+                        <i class="fa-solid fa-crown" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <h3>You are a VIP ${state.vipPackage.name} Member!</h3>
+                        <p style="font-size: 16px;">Expires: ${new Date(state.vipExpiry).toLocaleDateString()}</p>
+                        <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${daysLeft} days left!</p>
+                    </div>`;
+                    return;
+                }
             }
 
             if (state.vipRequested) {
@@ -1114,12 +1122,12 @@
                 const data = snapshot.val();
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
-                    if (new Date() < expiryDate) {
+                    const daysLeft = calculateDaysLeft(expiryDate);
+                    if (daysLeft > 0) {
                         const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
                         state.isVIP = true;
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
-                        const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                         state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
@@ -1155,8 +1163,8 @@
             let message = config.welcomeNotice.message;
             if (state.isVIP && state.vipPackage && state.vipExpiry) {
                 const expiryDate = new Date(state.vipExpiry);
-                if (new Date() < expiryDate) {
-                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft > 0) {
                     const pkg = state.vipPackage;
                     const dailyAds = pkg.dailyAds;
                     const rewardPerAd = config.AD_REWARD;
