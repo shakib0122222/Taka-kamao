@@ -77,7 +77,7 @@
         #profile-pic img { width: 100%; height: 100%; object-fit: cover; }
         .vip-king-badge { position: absolute; top: -5px; left: -5px; width: 24px; height: 24px; background: var(--vip-king-bg); border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: pulse 2s infinite; z-index: 1; }
         #greeting { font-size: 22px; font-weight: 800; }
-        #greeting .vip-status { font-size: 14px; color: var(--vip-gold); font-weight: 600; display: block; margin-top: 2px; }
+        #greeting .vip-status { font-size: 14px; color: var(--vip-gold); font-weight: 600; display: block; margin-top: 2px; text-shadow: 0 0 5px rgba(255,215,0,0.5); }
         #greeting .vip-countdown { font-size: 12px; color: var(--text-light); }
         
         .balance-card { position: relative; overflow: hidden; background: var(--tomato-gradient); color: white; padding: 28px; border-radius: 24px; text-align: center; margin-bottom: 20px; box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.3); animation: fadeIn 0.6s ease-out; }
@@ -594,8 +594,11 @@
             },
             REFERRAL_REWARD: 50,
             VIP_PACKAGES: [
+                { id: 'vip_50', name: 'VIP Starter', price: 50, dailyAds: 18, validityDays: 5 },
                 { id: 'vip_100', name: 'VIP Basic', price: 100, dailyAds: 20, validityDays: 7 },
-                { id: 'vip_200', name: 'VIP Pro', price: 200, dailyAds: 30, validityDays: 10 }
+                { id: 'vip_200', name: 'VIP Pro', price: 200, dailyAds: 30, validityDays: 10 },
+                { id: 'vip_500', name: 'VIP Gold', price: 500, dailyAds: 50, validityDays: 30 },
+                { id: 'vip_1000', name: 'VIP Platinum', price: 1000, dailyAds: 100, validityDays: 90 }
             ],
             bonusTasks: [
                 { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
@@ -712,19 +715,7 @@
             }
             watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
 
-            // VIP King Badge
-            const profilePic = allDOMElements.profilePicEl;
-            let badge = profilePic.querySelector('.vip-king-badge');
-            if (state.isVIP) {
-                if (!badge) {
-                    badge = document.createElement('div');
-                    badge.className = 'vip-king-badge';
-                    badge.innerHTML = 'KING';
-                    profilePic.appendChild(badge);
-                }
-            } else if (badge) {
-                badge.remove();
-            }
+            // No VIP King Badge
 
             updateChart();
         }
@@ -868,7 +859,7 @@
             const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
             vipItem.innerHTML = `
                 <div class="bonus-header">
-                    <img src="https://i.ibb.co/7zYkJ3K/vip-crown.gif" alt="VIP" class="icon">
+                    <img src="https://raw.githubusercontent.com/shakib0122222/Taka-kamao/10167fd6277ff23e6fe821b9b9e1e36a8744b35e/vip%20(1).gif" alt="VIP" class="icon">
                     <div class="details">
                         <h4 class="title">VIP Membership</h4>
                         <p class="reward"><i class="fa-solid fa-crown"></i> Unlock More Ads & Earnings!</p>
