@@ -178,7 +178,7 @@
         }
         .bonus-item:hover { border-color: var(--primary-color); box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.2); }
         .bonus-item .bonus-header { display: flex; align-items: center; gap: 12px; flex: 1; }
-        .bonus-item .icon { font-size: 28px; margin-right: 0; }
+        .bonus-item .icon { font-size: 28px; margin-right: 0; width: 28px; height: 28px; object-fit: contain; }
         .bonus-item .details { display: flex; flex-direction: column; gap: 6px; text-align: left; }
         .bonus-item .title { font-weight: 700; font-size: 16px; color: var(--text-color); margin: 0; }
         .bonus-item .reward { font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 0; }
@@ -1127,6 +1127,8 @@
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
                     saveState();
                     updateUI();
                 }
