@@ -617,7 +617,7 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0, vipStatus: null };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
@@ -636,7 +636,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.vipStatus) state.vipStatus = null; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -680,7 +680,6 @@
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
-                    state.vipStatus = null;
                     saveState();
                     safeTgAlert('Your VIP membership has expired. Upgrade again to continue enjoying benefits!');
                 } else {
@@ -716,6 +715,8 @@
                 watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= dailyLimit ? 'Take a Break' : 'Watch Ad';
             }
             watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
+
+            // No VIP King Badge
 
             updateChart();
         }
@@ -856,12 +857,7 @@
             const bonusTasksListEl = allDOMElements.bonusTasksListEl;
             const vipItem = document.createElement('div');
             vipItem.className = 'bonus-item vip-item';
-            let statusText = 'Buy Now';
-            if (state.isVIP) {
-                statusText = 'Active';
-            } else if (state.vipStatus === 'pending') {
-                statusText = 'Pending';
-            }
+            const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
             vipItem.innerHTML = `
                 <div class="bonus-header">
                     <img src="https://raw.githubusercontent.com/shakib0122222/Taka-kamao/10167fd6277ff23e6fe821b9b9e1e36a8744b35e/vip%20(1).gif" alt="VIP" class="icon">
@@ -937,7 +933,7 @@
                 return;
             }
 
-            if (state.vipStatus === 'pending') {
+            if (state.vipRequested) {
                 container.innerHTML = `<div style="text-align: center; padding: 40px; color: orange;">
                     <i class="fa-solid fa-clock" style="font-size: 48px; margin-bottom: 20px;"></i>
                     <h3>VIP Request Pending</h3>
@@ -986,38 +982,46 @@
 
             try {
                 const user = tg.initDataUnsafe.user;
-                const now = new Date();
-                const expiryDate = new Date(now.getTime() + pkg.validityDays * 24 * 60 * 60 * 1000);
-                await firebaseDb.ref(`vip_users/${user.id}`).set({
+                // Calculate expiry date based on validityDays from the current date
+                const currentDate = new Date();
+                const expiryDate = new Date(currentDate);
+                expiryDate.setDate(currentDate.getDate() + pkg.validityDays);
+                const expiryISO = expiryDate.toISOString();
+
+                // Set in vip_requests for admin review
+                await firebaseDb.ref(`vip_requests/${user.id}`).set({
                     userId: user.id,
                     username: user.username || 'N/A',
                     name: `${user.first_name} ${user.last_name || ''}`,
                     packageId: pkg.id,
-                    name: pkg.name,
                     price: pkg.price,
-                    dailyAds: pkg.dailyAds,
-                    validityDays: pkg.validityDays,
-                    expiry: expiryDate.toISOString(),
                     txid: txid,
-                    timestamp: now.toISOString(),
-                    active: false,
+                    expiry: expiryISO, // Store calculated expiry for admin to use
+                    timestamp: new Date().toISOString(),
                     status: 'pending'
                 });
 
-                // Send notification to admin
-                const adminMessage = `<b>👑 New VIP Request 👑</b>\n\n👤 <b>User:</b> ${escapeHTML(user.first_name)} ${escapeHTML(user?.last_name || '')} (@${escapeHTML(user.username || 'N/A')})\n🆔 <b>User ID:</b> <code>${user.id}</code>\n---------------------------------------\n📦 <b>Package:</b> ${escapeHTML(pkg.name)}\n💰 <b>Price:</b> ৳${pkg.price}\n🎯 <b>Daily Ads:</b> ${pkg.dailyAds}\n📅 <b>Validity:</b> ${pkg.validityDays} days\n⏰ <b>Expiry:</b> ${expiryDate.toLocaleDateString()}\n💳 <b>TxID:</b> <code>${escapeHTML(txid)}</code>\n\nPlease verify payment and update <code>active: true</code> in Firebase if valid.`;
-                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
-                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: adminMessage, parse_mode: 'HTML' }) }).then(res => res.json()));
-                await Promise.all(promises);
+                // Also set in vip_users with active: false (pending state), so expiry is pre-calculated
+                await firebaseDb.ref(`vip_users/${user.id}`).set({
+                    active: false,
+                    packageId: pkg.id,
+                    expiry: expiryISO,
+                    price: pkg.price,
+                    txid: txid,
+                    status: 'pending',
+                    timestamp: new Date().toISOString()
+                });
 
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
-                state.vipStatus = 'pending';
+                state.vipPackage = pkg; // Temporarily set for UI preview
+                state.vipExpiry = expiryISO; // Set expiry for days left calculation in pending state
+                const pendingDaysLeft = Math.ceil((new Date(expiryISO) - new Date()) / (1000 * 60 * 60 * 24));
+                state.vipDaysLeft = pendingDaysLeft; // Show remaining validity days even in pending
                 saveState();
-                safeTgAlert(`VIP Request Sent for ${pkg.name}! Wait for admin approval. Your VIP will be active for ${pkg.validityDays} days from request time.`);
+                safeTgAlert(`VIP Request Sent! Wait for admin approval. Your ${pkg.name} will be active for ${pkg.validityDays} days (remaining: ${pendingDaysLeft} days after approval).`);
                 closeModal('vipModal');
             } catch (e) {
-                console.error(e);
                 safeTgAlert('Failed. Try again.');
             } finally {
                 text.style.display = 'inline'; spinner.style.display = 'none'; btn.disabled = false;
@@ -1126,7 +1130,7 @@
             const userId = tg.initDataUnsafe.user.id;
             firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.active) {
+                if (data && data.active && data.expiry) {
                     const expiryDate = new Date(data.expiry);
                     if (new Date() < expiryDate) {
                         const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
@@ -1136,28 +1140,47 @@
                             state.vipExpiry = data.expiry;
                             const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                             state.vipDaysLeft = daysLeft;
-                            state.vipStatus = 'active';
+                            state.vipRequested = false; // Clear pending if activated
+                            state.vipRequestTxId = null;
                             saveState();
                             updateUI();
-                            const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${daysLeft} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                            const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
                             safeTgAlert(welcomeMsg);
                         }
                     } else {
                         // Auto deactivate if expired
                         firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
+                        state.isVIP = false;
+                        state.vipPackage = null;
+                        state.vipExpiry = null;
+                        state.vipDaysLeft = 0;
+                        saveState();
+                        updateUI();
                     }
-                } else if (data && data.status === 'pending') {
-                    state.vipStatus = 'pending';
-                    state.vipRequestTxId = data.txid;
-                    state.vipRequested = true;
-                    saveState();
-                    updateUI();
+                } else if (data && data.status === 'pending' && data.expiry) {
+                    // Pending state: Show package and remaining days based on calculated expiry
+                    const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
+                    if (pkg) {
+                        state.vipPackage = pkg;
+                        state.vipExpiry = data.expiry;
+                        const expiryDate = new Date(data.expiry);
+                        const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                        state.vipDaysLeft = daysLeft;
+                        state.vipRequested = true;
+                        state.vipRequestTxId = data.txid || null;
+                        saveState();
+                        updateUI();
+                        // Optionally show pending status in UI
+                        const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
+                        if (vipStatusEl) {
+                            vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP ${pkg.name} (Pending - ${daysLeft} days left after approval)`;
+                        }
+                    }
                 } else {
                     state.isVIP = false;
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
-                    state.vipStatus = null;
                     state.vipRequested = false;
                     state.vipRequestTxId = null;
                     saveState();
@@ -1181,9 +1204,15 @@
                 const pkg = state.vipPackage;
                 const dailyAds = pkg.dailyAds;
                 const rewardPerAd = config.AD_REWARD;
+                const validityDays = pkg.validityDays;
                 const daysLeft = state.vipDaysLeft;
                 const potentialDailyEarning = dailyAds * rewardPerAd;
-                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি: ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বৈধতা: ${validityDays} দিন (বাকি ${daysLeft} দিন)\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+            } else if (state.vipRequested && state.vipPackage && state.vipDaysLeft > 0) {
+                const pkg = state.vipPackage;
+                const validityDays = pkg.validityDays;
+                const daysLeft = state.vipDaysLeft;
+                message += `\n\nVIP Request Pending: ${pkg.name} for ${validityDays} days (remaining: ${daysLeft} days after approval).`;
             }
             return message;
         }
@@ -1249,18 +1278,13 @@
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
-                // VIP Countdown Interval for Real-time Days Left Update
-                vipCountdownInterval = setInterval(() => {
-                    if (state.isVIP && state.vipExpiry) {
-                        updateUI();
-                    }
-                }, 60000); // Check every minute
-
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
                     let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
-                    if (state.isVIP) {
+                    if (state.isVIP && state.vipDaysLeft > 0) {
                         greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${state.vipDaysLeft} days left)</div>`;
+                    } else if (state.vipRequested && state.vipDaysLeft > 0) {
+                        greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (Pending - ${state.vipDaysLeft} days left)</div>`;
                     }
                     allDOMElements.greetingEl.innerHTML = greetingText;
                     if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
