@@ -621,6 +621,7 @@
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
+        let selectedPackage = null;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
@@ -1145,6 +1146,20 @@
             document.body.appendChild(script);
         }
 
+        function generateWelcomeMessage() {
+            let message = config.welcomeNotice.message;
+            if (state.isVIP && state.vipPackage && state.vipDaysLeft > 0) {
+                const pkg = state.vipPackage;
+                const dailyAds = pkg.dailyAds;
+                const rewardPerAd = config.AD_REWARD;
+                const validityDays = pkg.validityDays;
+                const daysLeft = state.vipDaysLeft;
+                const potentialDailyEarning = dailyAds * rewardPerAd;
+                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বৈধতা: ${validityDays} দিন (বাকি ${daysLeft} দিন)\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+            }
+            return message;
+        }
+
         async function initApp() {
             let appReady = false;
             let preloaderAnimationDone = false;
@@ -1180,7 +1195,7 @@
                 populateWithdrawalMethods();
 
                 allDOMElements.welcomeTitle.textContent = config.welcomeNotice.title;
-                allDOMElements.welcomeMessage.textContent = config.welcomeNotice.message;
+                allDOMElements.welcomeMessage.textContent = generateWelcomeMessage();
 
                 await initDB(); 
                 await loadState();
