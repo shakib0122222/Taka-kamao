@@ -982,13 +982,6 @@
 
             try {
                 const user = tg.initDataUnsafe.user;
-                // Calculate expiry date based on validityDays from the current date
-                const currentDate = new Date();
-                const expiryDate = new Date(currentDate);
-                expiryDate.setDate(currentDate.getDate() + pkg.validityDays);
-                const expiryISO = expiryDate.toISOString();
-
-                // Set in vip_requests for admin review
                 await firebaseDb.ref(`vip_requests/${user.id}`).set({
                     userId: user.id,
                     username: user.username || 'N/A',
@@ -996,30 +989,14 @@
                     packageId: pkg.id,
                     price: pkg.price,
                     txid: txid,
-                    expiry: expiryISO, // Store calculated expiry for admin to use
                     timestamp: new Date().toISOString(),
                     status: 'pending'
                 });
 
-                // Also set in vip_users with active: false (pending state), so expiry is pre-calculated
-                await firebaseDb.ref(`vip_users/${user.id}`).set({
-                    active: false,
-                    packageId: pkg.id,
-                    expiry: expiryISO,
-                    price: pkg.price,
-                    txid: txid,
-                    status: 'pending',
-                    timestamp: new Date().toISOString()
-                });
-
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
-                state.vipPackage = pkg; // Temporarily set for UI preview
-                state.vipExpiry = expiryISO; // Set expiry for days left calculation in pending state
-                const pendingDaysLeft = Math.ceil((new Date(expiryISO) - new Date()) / (1000 * 60 * 60 * 24));
-                state.vipDaysLeft = pendingDaysLeft; // Show remaining validity days even in pending
                 saveState();
-                safeTgAlert(`VIP Request Sent! Wait for admin approval. Your ${pkg.name} will be active for ${pkg.validityDays} days (remaining: ${pendingDaysLeft} days after approval).`);
+                safeTgAlert('VIP Request Sent! Wait for admin approval.');
                 closeModal('vipModal');
             } catch (e) {
                 safeTgAlert('Failed. Try again.');
@@ -1130,51 +1107,22 @@
             const userId = tg.initDataUnsafe.user.id;
             firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.active && data.expiry) {
+                if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
                     if (new Date() < expiryDate) {
                         const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
-                        if (pkg) {
-                            state.isVIP = true;
-                            state.vipPackage = pkg;
-                            state.vipExpiry = data.expiry;
-                            const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                            state.vipDaysLeft = daysLeft;
-                            state.vipRequested = false; // Clear pending if activated
-                            state.vipRequestTxId = null;
-                            saveState();
-                            updateUI();
-                            const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
-                            safeTgAlert(welcomeMsg);
-                        }
+                        state.isVIP = true;
+                        state.vipPackage = pkg;
+                        state.vipExpiry = data.expiry;
+                        const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                        state.vipDaysLeft = daysLeft;
+                        saveState();
+                        updateUI();
+                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                        safeTgAlert(welcomeMsg);
                     } else {
                         // Auto deactivate if expired
                         firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
-                        state.isVIP = false;
-                        state.vipPackage = null;
-                        state.vipExpiry = null;
-                        state.vipDaysLeft = 0;
-                        saveState();
-                        updateUI();
-                    }
-                } else if (data && data.status === 'pending' && data.expiry) {
-                    // Pending state: Show package and remaining days based on calculated expiry
-                    const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
-                    if (pkg) {
-                        state.vipPackage = pkg;
-                        state.vipExpiry = data.expiry;
-                        const expiryDate = new Date(data.expiry);
-                        const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                        state.vipDaysLeft = daysLeft;
-                        state.vipRequested = true;
-                        state.vipRequestTxId = data.txid || null;
-                        saveState();
-                        updateUI();
-                        // Optionally show pending status in UI
-                        const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
-                        if (vipStatusEl) {
-                            vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP ${pkg.name} (Pending - ${daysLeft} days left after approval)`;
-                        }
                     }
                 } else {
                     state.isVIP = false;
@@ -1208,11 +1156,6 @@
                 const daysLeft = state.vipDaysLeft;
                 const potentialDailyEarning = dailyAds * rewardPerAd;
                 message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বৈধতা: ${validityDays} দিন (বাকি ${daysLeft} দিন)\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
-            } else if (state.vipRequested && state.vipPackage && state.vipDaysLeft > 0) {
-                const pkg = state.vipPackage;
-                const validityDays = pkg.validityDays;
-                const daysLeft = state.vipDaysLeft;
-                message += `\n\nVIP Request Pending: ${pkg.name} for ${validityDays} days (remaining: ${daysLeft} days after approval).`;
             }
             return message;
         }
@@ -1276,15 +1219,28 @@
                 await listenForReferralCount();
                 await listenForVIPStatus();
                 
+                // Clear old pending VIP requests
+                if (firebaseDb && tg && tg.initDataUnsafe) {
+                    const userId = tg.initDataUnsafe.user.id;
+                    const reqRef = firebaseDb.ref(`vip_requests/${userId}`);
+                    reqRef.once('value').then(snapshot => {
+                        const data = snapshot.val();
+                        if (data && data.status !== 'pending') {
+                            state.vipRequested = false;
+                            state.vipRequestTxId = null;
+                            saveState();
+                            updateUI();
+                        }
+                    }).catch(e => console.error("Error checking old VIP request:", e));
+                }
+                
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
                     let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
-                    if (state.isVIP && state.vipDaysLeft > 0) {
+                    if (state.isVIP) {
                         greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${state.vipDaysLeft} days left)</div>`;
-                    } else if (state.vipRequested && state.vipDaysLeft > 0) {
-                        greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (Pending - ${state.vipDaysLeft} days left)</div>`;
                     }
                     allDOMElements.greetingEl.innerHTML = greetingText;
                     if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
