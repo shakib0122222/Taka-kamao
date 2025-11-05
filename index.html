@@ -41,6 +41,8 @@
             --glass-bg: rgba(240, 242, 245, 0.8); 
             --tomato-color: #ff6347;
             --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
+            --vip-gold: #ffd700;
+            --vip-king-bg: linear-gradient(135deg, #ffd700, #ffed4e);
         }
         [data-theme="dark"] { 
             --primary-color: #ff6347; 
@@ -54,6 +56,8 @@
             --glass-bg: rgba(28, 28, 30, 0.8); 
             --tomato-color: #ff6347;
             --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
+            --vip-gold: #ffd700;
+            --vip-king-bg: linear-gradient(135deg, #ffd700, #ffed4e);
         }
         
         * { box-sizing: border-box; }
@@ -71,8 +75,10 @@
         .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; animation: fadeIn 0.5s ease-out; }
         #profile-pic { width: 52px; height: 52px; border-radius: 50%; background: var(--tomato-gradient); background-size: cover; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; border: 2px solid var(--card-background); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; position: relative; }
         #profile-pic img { width: 100%; height: 100%; object-fit: cover; }
-        .vip-badge { position: absolute; bottom: -5px; right: -5px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; animation: pulse 2s infinite; }
+        .vip-king-badge { position: absolute; top: -5px; left: -5px; width: 24px; height: 24px; background: var(--vip-king-bg); border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: pulse 2s infinite; z-index: 1; }
         #greeting { font-size: 22px; font-weight: 800; }
+        #greeting .vip-status { font-size: 14px; color: var(--vip-gold); font-weight: 600; display: block; margin-top: 2px; }
+        #greeting .vip-countdown { font-size: 12px; color: var(--text-light); }
         
         .balance-card { position: relative; overflow: hidden; background: var(--tomato-gradient); color: white; padding: 28px; border-radius: 24px; text-align: center; margin-bottom: 20px; box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.3); animation: fadeIn 0.6s ease-out; }
         .balance-card::after { content: '\f51e'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: -20px; bottom: -30px; font-size: 120px; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
@@ -195,14 +201,33 @@
 
         /* VIP Item Style */
         .vip-item { 
-            border: 2px solid gold !important; 
-            background: linear-gradient(135deg, #ffd700, #ffed4e) !important; 
+            border: 2px solid var(--vip-gold) !important; 
+            background: var(--vip-king-bg) !important; 
             color: #000 !important; 
             animation: pulse 2s infinite;
         }
         .vip-item .title { color: #000 !important; font-weight: 800; }
         .vip-item .reward { color: #000 !important; font-weight: 700; }
-        .vip-item .claim-button { background: #000 !important; color: gold !important; }
+        .vip-item .claim-button { background: #000 !important; color: var(--vip-gold) !important; border: 1px solid var(--vip-gold) !important; }
+
+        /* VIP Modal Special Style */
+        #vipModal { align-items: stretch; justify-content: stretch; }
+        #vipModal .modal-content { 
+            width: 100%; height: 100vh; max-width: none; max-height: none; margin: 0; border-radius: 0; 
+            padding: 20px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--vip-gold) transparent; 
+            background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; 
+        }
+        #vipModal .modal-content::-webkit-scrollbar { width: 6px; }
+        #vipModal .modal-content::-webkit-scrollbar-track { background: transparent; }
+        #vipModal .modal-content::-webkit-scrollbar-thumb { background: var(--vip-gold); border-radius: 3px; }
+        #vipModal .close-button { position: fixed; top: 20px; right: 20px; z-index: 1001; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; }
+        #vipModal h3 { color: var(--vip-gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); text-align: center; margin-bottom: 20px; }
+        #vip-packages .vip-package { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--card-background); border-radius: 16px; margin: 15px 0; border: 2px solid var(--border-color); transition: all 0.3s; cursor: pointer; }
+        #vip-packages .vip-package:hover { border-color: var(--vip-gold); box-shadow: 0 4px 16px rgba(255,215,0,0.3); }
+        #vip-packages .vip-package.selected { border-color: var(--vip-gold); background: rgba(255,215,0,0.1); }
+        #payment-guide { background: rgba(255,215,0,0.1); border: 2px solid var(--vip-gold); border-radius: 16px; padding: 20px; margin: 20px; text-align: left; }
+        #payment-guide p { margin: 10px 0; font-weight: 600; }
+        #txid-input { margin: 10px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; }
 
         .history-item { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         .history-item:last-child { border-bottom: none; }
@@ -392,37 +417,6 @@
             color: var(--text-color);
             font-size: 14px;
         }
-
-        /* VIP Modal Styles */
-        #vipModal .modal-content {
-            max-width: 450px;
-        }
-        #vipModal .vip-package {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background: var(--card-background);
-            border-radius: 12px;
-            margin: 10px 0;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s;
-        }
-        #vipModal .vip-package:hover {
-            border-color: gold;
-            box-shadow: 0 4px 12px rgba(255,215,0,0.2);
-        }
-        #vipModal .vip-package.selected {
-            border-color: gold;
-            background: rgba(255,215,0,0.1);
-        }
-        #payment-guide {
-            background: rgba(255,215,0,0.1);
-            border: 1px solid gold;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: left;
-        }
     </style>
 </head>
 <body>
@@ -437,7 +431,10 @@
     <div id="ad-loader-overlay"><div class="loader"></div><span>Loading Ad...</span></div>
     
     <div class="container">
-        <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">Welcome!</h1></div>
+        <div class="profile-header">
+            <div id="profile-pic"><i class="fa-solid fa-user"></i></div>
+            <h1 id="greeting">Welcome!</h1>
+        </div>
         <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
         <div class="stats-grid">
             <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">Ads Watched</div></div>
@@ -485,24 +482,23 @@
         </div>
     </div>
 
-    <!-- VIP Modal -->
+    <!-- VIP Modal - Full Page Style -->
     <div id="vipModal" class="modal">
+        <span class="close-button" onclick="closeModal('vipModal')">&times;</span>
         <div class="modal-content">
-            <span class="close-button" onclick="closeModal('vipModal')">&times;</span>
-            <h3 class="card-title" style="color: gold; text-shadow: 0 0 10px rgba(255,215,0,0.5);">VIP Membership</h3>
-            <div id="vip-packages" style="margin-bottom: 20px;"></div>
+            <h3 class="card-title">VIP Membership Plans</h3>
+            <div id="vip-packages"></div>
             <div id="payment-guide" style="display: none;">
-                <p style="margin: 0 0 10px; font-weight: 600; color: var(--text-color);">Send Payment to:</p>
-                <p style="font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 5px 0;">Bkash/Nagad: <strong>01925723245</strong></p>
-                <button class="action-button secondary-button" onclick="copyPaymentNumber()" style="margin: 10px 0; padding: 10px;">
+                <h4 style="color: var(--vip-gold);">Payment Instructions</h4>
+                <p>Send payment to: <strong>Bkash/Nagad: 01925723245</strong></p>
+                <button class="action-button secondary-button" onclick="copyPaymentNumber()" style="margin: 10px 0;">
                     <i class="fa-solid fa-copy"></i> Copy Number
                 </button>
-                <input type="text" id="txid-input" placeholder="Enter Transaction ID *" style="margin: 10px 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;" required>
-                <button class="action-button" id="vip-request-btn" onclick="sendVIPRequest(selectedPackage)">
-                    <span>Send VIP Request</span>
+                <input type="text" id="txid-input" placeholder="Enter Transaction ID" style="margin: 10px 0; width: 100%;">
+                <button class="action-button" id="vip-request-btn">
+                    <span>Submit VIP Request</span>
                     <div class="spinner" style="display: none;"></div>
                 </button>
-                <p style="font-size: 12px; color: var(--text-light); margin-top: 10px;">Admin will approve within 1 hour after verification.</p>
             </div>
         </div>
     </div>
@@ -575,15 +571,15 @@
             ADMIN_SUPPORT_LINK: 'https://t.me/tomato_admin_bot',
             TUTORIAL_LINK: 'https://www.youtube.com/@shakibexplainer',
             GROUP_LINK: 'https://t.me/shakibexplainer',
-            PAYMENT_PROOF_LINK: 'https://t.me/tomato_payment', // Placeholder, update as needed
+            PAYMENT_PROOF_LINK: 'https://t.me/tomato_payment',
             MONETAG_ZONE_ID: '10072766',
-            AD_REWARD: 5, // ৳5 per ad
+            AD_REWARD: 5,
             DAILY_AD_LIMIT: 15,
-            MINIMUM_WITHDRAWAL: 500, // ৳500
+            MINIMUM_WITHDRAWAL: 500,
             MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
-            REFERRAL_MIN_ADD: 100, // Minimum 100 BDT to add to main balance
-            MIN_AD_EARNING_FOR_WITHDRAW: 500, // Minimum ad earning in main balance for withdraw
+            REFERRAL_MIN_ADD: 100,
+            MIN_AD_EARNING_FOR_WITHDRAW: 500,
             withdrawalMethods: ['Bkash', 'Nagad'],
             PAYMENT_NUMBER: '01925723245',
             firebase: {
@@ -596,7 +592,7 @@
                 appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
                 measurementId: "G-V0QDHQ27L3"
             },
-            REFERRAL_REWARD: 50, // ৳50 per referral
+            REFERRAL_REWARD: 50,
             VIP_PACKAGES: [
                 { id: 'vip_100', name: 'VIP Basic', price: 100, dailyAds: 20, validityDays: 7 },
                 { id: 'vip_200', name: 'VIP Pro', price: 200, dailyAds: 30, validityDays: 10 }
@@ -618,17 +614,17 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
-        let selectedPackage = null;
+        let vipCountdownInterval;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
             container: document.querySelector('.container'), totalEarningEl: document.getElementById('total-earning'), adCountEl: document.getElementById('ad-count'), 
             adsTodayCountEl: document.getElementById('ads-today-count'), referralCountEl: document.getElementById('referral-count'), watchAdButton: document.getElementById('watch-ad-button'), 
             withdrawForm: document.getElementById('withdraw-form'), adLoaderOverlay: document.getElementById('ad-loader-overlay'), profilePicEl: document.getElementById('profile-pic'), 
-            greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), adminContactButton: document.getElementById('admin-contact-button'), 
+            greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
             welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
@@ -636,7 +632,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -671,7 +667,28 @@
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
-            const dailyLimit = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+
+            // VIP Expiry Check & Countdown
+            if (state.isVIP && state.vipExpiry) {
+                const expiryDate = new Date(state.vipExpiry);
+                if (new Date() >= expiryDate) {
+                    state.isVIP = false;
+                    state.vipPackage = null;
+                    state.vipExpiry = null;
+                    state.vipDaysLeft = 0;
+                    saveState();
+                    safeTgAlert('Your VIP membership has expired. Upgrade again to continue enjoying benefits!');
+                } else {
+                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                    state.vipDaysLeft = daysLeft;
+                    const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
+                    if (vipStatusEl) {
+                        vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${daysLeft} days left)`;
+                    }
+                }
+            }
+
+            const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
             allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${dailyLimit}`;
             
             clearInterval(cooldownInterval);
@@ -695,19 +712,20 @@
             }
             watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
 
-            // VIP Badge
+            // VIP King Badge
             const profilePic = allDOMElements.profilePicEl;
-            if (state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry)) {
-                if (!profilePic.querySelector('.vip-badge')) {
-                    const badge = document.createElement('img');
-                    badge.src = 'https://i.ibb.co/7zYkJ3K/vip-crown.gif';
-                    badge.className = 'vip-badge';
+            let badge = profilePic.querySelector('.vip-king-badge');
+            if (state.isVIP) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'vip-king-badge';
+                    badge.innerHTML = 'KING';
                     profilePic.appendChild(badge);
                 }
-            } else {
-                const existingBadge = profilePic.querySelector('.vip-badge');
-                if (existingBadge) existingBadge.remove();
+            } else if (badge) {
+                badge.remove();
             }
+
             updateChart();
         }
 
@@ -746,9 +764,9 @@
         }
         
         async function watchAd() {
-            const dailyLimit = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+            const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
             if (state.adsWatchedToday >= dailyLimit) {
-                safeTgAlert('Daily limit reached. Take a break!');
+                safeTgAlert('Daily limit reached!');
                 return;
             }
             allDOMElements.adLoaderOverlay.style.display = 'flex';
@@ -756,12 +774,12 @@
             if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
             adFunction().then(() => {
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
-                let alertMessage = `Ad watched! You have ${dailyLimit - state.adsWatchedToday} ads left today.`;
+                let alertMessage = `Ad watched! ${dailyLimit - state.adsWatchedToday} ads left.`;
                 if (state.adsWatchedToday >= dailyLimit) {
                     const cdDate = new Date();
                     cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
                     state.cooldownUntil = cdDate.toISOString();
-                    alertMessage = `Daily tasks completed! Take a 24-hour break.`;
+                    alertMessage = `Tasks completed! 24-hour break.`;
                 }
                 saveState(); updateUI();
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
@@ -789,9 +807,8 @@
             const amount = parseFloat(withdrawForm.elements['withdraw-amount'].value);
             const accountNumber = withdrawForm.elements['account-number'].value;
             
-            // Check if main balance (from ads) is at least 500
             if (state.totalEarning < config.MIN_AD_EARNING_FOR_WITHDRAW) {
-                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন। রেগুলার ads দেখে ইনকাম করুন এবং আপনার অ্যাকাউন্টকে সক্রিয় রাখুন!');
+                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন।');
                 return;
             }
             
@@ -848,17 +865,17 @@
             const bonusTasksListEl = allDOMElements.bonusTasksListEl;
             const vipItem = document.createElement('div');
             vipItem.className = 'bonus-item vip-item';
-            const status = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
+            const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
             vipItem.innerHTML = `
                 <div class="bonus-header">
-                    <img src="https://i.ibb.co/7zYkJ3K/vip-crown.gif" alt="VIP" class="icon" style="width: 32px; height: 32px;">
+                    <img src="https://i.ibb.co/7zYkJ3K/vip-crown.gif" alt="VIP" class="icon">
                     <div class="details">
                         <h4 class="title">VIP Membership</h4>
                         <p class="reward"><i class="fa-solid fa-crown"></i> Unlock More Ads & Earnings!</p>
                     </div>
                 </div>
-                <button class="claim-button" onclick="openVIPModal()" ${status === 'Active' ? 'disabled' : ''} style="background: ${status === 'Active' ? 'gold' : '#000'}; color: ${status === 'Active' ? '#000' : 'gold'};">
-                    ${status}
+                <button class="claim-button" onclick="openVIPModal()" ${state.isVIP ? 'disabled' : ''}>
+                    ${statusText}
                 </button>
             `;
             bonusTasksListEl.insertBefore(vipItem, bonusTasksListEl.firstChild);
@@ -867,8 +884,7 @@
         function renderBonusTasks() {
             const { bonusTasksListEl } = allDOMElements;
             bonusTasksListEl.innerHTML = '';
-            renderVIPOption(); // VIP at top
-            if (config.bonusTasks.length === 0) { bonusTasksListEl.innerHTML += '<p class="no-history">No bonus tasks are available right now.</p>'; return; }
+            renderVIPOption();
             config.bonusTasks.forEach(task => {
                 const isCompleted = state.completedBonusTasks.includes(task.id);
                 const item = document.createElement('div');
@@ -898,8 +914,7 @@
             safeTgAction(tg => tg.openLink(task.link));
             setTimeout(() => {
                 if (state.completedBonusTasks.includes(task.id)) return;
-                // Simulate verification - in real app, check via bot if joined
-                safeTgAlert('Verification complete! Bonus claimed. (Note: Actual join required in production)');
+                safeTgAlert('Verification complete! Bonus claimed.');
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
                 saveState(); updateUI(); button.textContent = 'Completed ✓';
@@ -908,59 +923,65 @@
         }
 
         function openVIPModal() {
-            showModal('vipModal');
+            const modal = document.getElementById('vipModal');
+            modal.style.display = 'flex';
             const container = document.getElementById('vip-packages');
             const guide = document.getElementById('payment-guide');
             container.innerHTML = '';
             guide.style.display = 'none';
+            selectedPackage = null;
 
-            if (state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry)) {
-                container.innerHTML = `<p style="text-align:center; font-weight:700; color:gold; font-size:16px;">
-                    <i class="fa-solid fa-crown"></i> You are a ${state.vipPackage.name} Member!<br>
-                    Expires: ${new Date(state.vipExpiry).toLocaleDateString()}<br><br>
-                    <small style="color:var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day!</small>
-                </p>`;
+            if (state.isVIP && state.vipExpiry && new Date() < new Date(state.vipExpiry)) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--vip-gold);">
+                    <i class="fa-solid fa-crown" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <h3>You are a VIP ${state.vipPackage.name} Member!</h3>
+                    <p style="font-size: 16px;">Expires: ${new Date(state.vipExpiry).toLocaleDateString()}</p>
+                    <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${state.vipDaysLeft} days left!</p>
+                </div>`;
                 return;
             }
 
             if (state.vipRequested) {
-                container.innerHTML = `<p style="text-align:center; color:orange; font-weight:600;">
-                    <i class="fa-solid fa-clock"></i> VIP Request Pending<br>
-                    <small style="color:var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</small>
-                </p>`;
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: orange;">
+                    <i class="fa-solid fa-clock" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <h3>VIP Request Pending</h3>
+                    <p style="font-size: 14px; color: var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</p>
+                </div>`;
                 return;
             }
 
+            // Render VIP List - Scrollable
             config.VIP_PACKAGES.forEach(pkg => {
                 const div = document.createElement('div');
-                div.className = 'vip-package';
+                div.className = `vip-package ${selectedPackage === pkg ? 'selected' : ''}`;
                 div.onclick = () => {
                     selectedPackage = pkg;
                     document.querySelectorAll('.vip-package').forEach(d => d.classList.remove('selected'));
                     div.classList.add('selected');
-                    document.getElementById('payment-guide').style.display = 'block';
+                    guide.style.display = 'block';
+                    document.getElementById('vip-request-btn').onclick = () => sendVIPRequest(pkg);
                 };
                 div.innerHTML = `
-                    <div style="flex:1; text-align:left;">
-                        <h4 style="margin:0; font-weight:700; color:var(--text-color);">${pkg.name}</h4>
-                        <p style="margin:5px 0; color:var(--text-light); font-size:14px;">
+                    <div style="flex: 1; text-align: left;">
+                        <h4 style="margin: 0; font-weight: 700; color: var(--text-color);">${pkg.name}</h4>
+                        <p style="margin: 5px 0; color: var(--text-light);">
                             <i class="fa-solid fa-play"></i> ${pkg.dailyAds} Ads/Day • <i class="fa-solid fa-calendar"></i> ${pkg.validityDays} Days
                         </p>
                     </div>
-                    <div style="text-align:right; font-weight:800; font-size:20px; color:gold;">৳${pkg.price}</div>
+                    <div style="text-align: right; font-weight: 800; font-size: 24px; color: var(--vip-gold);">৳${pkg.price}</div>
                 `;
                 container.appendChild(div);
             });
         }
 
         function copyPaymentNumber() {
-            navigator.clipboard.writeText(config.PAYMENT_NUMBER).then(() => safeTgAlert('Payment number copied!'));
+            navigator.clipboard.writeText(config.PAYMENT_NUMBER).then(() => safeTgAlert('Number copied!'));
         }
 
         async function sendVIPRequest(pkg) {
             const txid = document.getElementById('txid-input').value.trim();
-            if (!txid) return safeTgAlert('Enter Transaction ID');
-            if (!pkg) return safeTgAlert('Select a package first');
+            if (!txid) return safeTgAlert('Please enter Transaction ID');
+            if (!selectedPackage) return safeTgAlert('Please select a package');
 
             const btn = document.getElementById('vip-request-btn');
             const text = btn.querySelector('span');
@@ -979,14 +1000,14 @@
                     timestamp: new Date().toISOString(),
                     status: 'pending'
                 });
+
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
                 saveState();
-                safeTgAlert('VIP Request sent! Admin will approve after verification.');
+                safeTgAlert('VIP Request Sent! Wait for admin approval.');
                 closeModal('vipModal');
             } catch (e) {
-                console.error(e);
-                safeTgAlert('Failed to send request. Try again.');
+                safeTgAlert('Failed. Try again.');
             } finally {
                 text.style.display = 'inline'; spinner.style.display = 'none'; btn.disabled = false;
             }
@@ -1002,7 +1023,11 @@
             const modal = document.getElementById(modalId);
             if(modal) modal.style.display = 'flex';
         }
-        function closeModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; if (modalId !== 'welcomeModal') { document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active')); } }
+        function closeModal(modalId) { 
+            const modal = document.getElementById(modalId); 
+            if(modal) modal.style.display = 'none'; 
+            if (modalId !== 'welcomeModal') { document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active')); } 
+        }
         function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
         function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
         function shareReferralLink() { 
@@ -1090,21 +1115,27 @@
             const userId = tg.initDataUnsafe.user.id;
             firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.active && new Date(data.expiry) > new Date()) {
-                    const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
-                    if (pkg) {
+                if (data && data.active) {
+                    const expiryDate = new Date(data.expiry);
+                    if (new Date() < expiryDate) {
+                        const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
                         state.isVIP = true;
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
-                        state.vipRequested = false;
+                        const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                        state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
-                        safeTgAlert(`VIP ${pkg.name} activated! Enjoy ${pkg.dailyAds} ads/day for ${pkg.validityDays} days.`);
+                        safeTgAlert(`Welcome back, VIP ${pkg.name}! ${daysLeft} days left.`);
+                    } else {
+                        // Auto deactivate if expired
+                        firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
                     }
                 } else {
                     state.isVIP = false;
                     state.vipPackage = null;
                     state.vipExpiry = null;
+                    state.vipDaysLeft = 0;
                     saveState();
                     updateUI();
                 }
@@ -1183,7 +1214,11 @@
 
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
-                    allDOMElements.greetingEl.textContent = `Welcome, ${escapeHTML(user.first_name)}!`;
+                    let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
+                    if (state.isVIP) {
+                        greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${state.vipDaysLeft} days left)</div>`;
+                    }
+                    allDOMElements.greetingEl.innerHTML = greetingText;
                     if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
                     else { allDOMElements.profilePicEl.innerHTML = `<span>${escapeHTML(user.first_name.charAt(0))}</span>`; }
                 }
