@@ -1221,6 +1221,13 @@
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
+                // VIP Countdown Interval for Real-time Days Left Update
+                vipCountdownInterval = setInterval(() => {
+                    if (state.isVIP && state.vipExpiry) {
+                        updateUI();
+                    }
+                }, 60000); // Check every minute
+
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
                     let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
