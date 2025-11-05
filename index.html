@@ -1113,15 +1113,19 @@
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
                     if (new Date() < expiryDate) {
-                        const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
                         state.isVIP = true;
-                        state.vipPackage = pkg;
+                        state.vipPackage = {
+                            id: data.packageId,
+                            name: data.name,
+                            dailyAds: data.dailyAds,
+                            validityDays: data.validityDays
+                        };
                         state.vipExpiry = data.expiry;
                         const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                         state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
-                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                        const welcomeMsg = `স্বাগতম, ${data.name} VIP! আপনি এখন ${data.validityDays} দিনের জন্য ${data.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
                         safeTgAlert(welcomeMsg);
                     } else {
                         // Auto deactivate if expired
