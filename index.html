@@ -3,28 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Taka Income Pro</title>
+    <title>Taka Income Pro - Earn Money</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Firebase -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+    <script>
+        // --- INSTANT THEME APPLY SCRIPT ---
+        (function() {
+            try {
+                const tg = window.Telegram.WebApp;
+                const isDark = tg.colorScheme === 'dark';
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {
+                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap');
         :root { 
-            --primary-color: #ff6347; 
+            --primary-color: #ff6347; /* টমেটু রঙ */
             --primary-color-rgb: 255, 99, 71; 
-            --secondary-color: #e5533d; 
+            --secondary-color: #e5533d; /* গাঢ় টমেটু */
             --background-color: #F0F2F5; 
             --card-background: #FFFFFF; 
             --text-color: #1D1D1F; 
             --text-light: #6E6E73; 
             --border-color: #E5E5EA; 
             --glass-bg: rgba(240, 242, 245, 0.8); 
+            --tomato-color: #ff6347;
             --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
         }
         [data-theme="dark"] { 
@@ -37,48 +52,377 @@
             --text-light: #8E8E93; 
             --border-color: #3A3A3C; 
             --glass-bg: rgba(28, 28, 30, 0.8); 
+            --tomato-color: #ff6347;
             --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
         }
         
         * { box-sizing: border-box; }
-        body { font-family: 'Noto Sans', sans-serif; margin: 0; padding: 20px 15px 100px 15px; background: var(--tomato-gradient), var(--background-color); background-size: cover; background-blend-mode: overlay; color: var(--text-color); transition: all 0.3s; }
+        html, body { overscroll-behavior-y: contain; }
+        body { font-family: 'Noto Sans', sans-serif; margin: 0; padding: 20px 15px 100px 15px; background: var(--tomato-gradient), var(--background-color); background-size: cover; background-blend-mode: overlay; color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
         
-        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: var(--tomato-gradient), var(--background-color); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: var(--tomato-gradient), var(--background-color); background-size: cover; background-blend-mode: overlay; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s ease; }
         #preloader i { font-size: 48px; color: var(--primary-color); animation: spin 1.5s linear infinite; }
         #preloader-percentage { font-size: 20px; font-weight: 700; color: var(--text-color); }
+        #preloader-footer { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 15px; z-index: 10000; transition: opacity 0.5s ease; }
+        #preloader-footer a { font-size: 14px; font-weight: 500; color: var(--text-light); text-decoration: none; }
 
         .container { max-width: 500px; margin: 0 auto; display: none; }
-        .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; position: relative; }
-        #profile-pic { width: 52px; height: 52px; border-radius: 50%; background: var(--tomato-gradient); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; border: 2px solid var(--card-background); color: white; position: relative; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; animation: fadeIn 0.5s ease-out; }
+        #profile-pic { width: 52px; height: 52px; border-radius: 50%; background: var(--tomato-gradient); background-size: cover; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; border: 2px solid var(--card-background); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; position: relative; }
         #profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .vip-badge { position: absolute; bottom: -5px; right: -5px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; animation: pulse 2s infinite; }
         #greeting { font-size: 22px; font-weight: 800; }
-
-        .balance-card { background: var(--tomato-gradient); color: white; padding: 28px; border-radius: 24px; text-align: center; margin-bottom: 20px; box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.3); }
-        .balance-card .amount { font-size: 48px; font-weight: 800; }
-
+        
+        .balance-card { position: relative; overflow: hidden; background: var(--tomato-gradient); color: white; padding: 28px; border-radius: 24px; text-align: center; margin-bottom: 20px; box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.3); animation: fadeIn 0.6s ease-out; }
+        .balance-card::after { content: '\f51e'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: -20px; bottom: -30px; font-size: 120px; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
+        .balance-card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 500; opacity: 0.9; z-index: 1; position: relative; }
+        .balance-card .amount { font-size: 48px; font-weight: 800; line-height: 1.2; z-index: 1; position: relative; }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-        .stat-item { background: var(--card-background); padding: 20px; border-radius: 18px; text-align: center; border: 1px solid var(--border-color); opacity: 0.95; }
+        .stat-item { position: relative; overflow: hidden; background: var(--card-background); padding: 20px; border-radius: 18px; text-align: center; border: 1px solid var(--border-color); animation: fadeIn 0.7s ease-out; transition: background-color 0.3s, border-color 0.3s; background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.9; }
+        .stat-item .bg-icon { position: absolute; right: 5px; bottom: 5px; font-size: 50px; opacity: 0.08; color: var(--text-color); pointer-events: none; }
+        .stat-item .icon { font-size: 28px; color: var(--primary-color); margin-bottom: 12px; }
         .stat-item .value { font-size: 24px; font-weight: 800; }
-
-        .card { background: var(--card-background); padding: 20px; border-radius: 18px; margin-bottom: 20px; border: 1px solid var(--border-color); opacity: 0.95; }
+        .stat-item .label { font-size: 14px; color: var(--text-light); }
+        
+        .card { background-color: var(--card-background); padding: 20px; border-radius: 18px; margin-bottom: 20px; border: 1px solid var(--border-color); animation: fadeIn 0.8s ease-out; transition: background-color 0.3s, border-color 0.3s; background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.95; }
         .card-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0.4); } 70% { box-shadow: 0 0 0 10px rgba(var(--primary-color-rgb), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0); } }
+        .action-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--tomato-gradient); color: white; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .action-button.pulsing { animation: pulse 2s infinite; }
+        .action-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(var(--primary-color-rgb), 0.3); }
+        .action-button:disabled { background-color: #8E8E93; cursor: not-allowed; }
+        .secondary-button { background-color: transparent !important; color: white !important; border: 2px solid white; margin-top: 15px; font-size: 16px; font-weight: 600; }
+        .secondary-button:hover { background-color: rgba(255, 255, 255, 0.1); color: white !important; }
+        
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 15px; background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; z-index: 100; background: var(--tomato-gradient), var(--glass-bg); background-size: cover; background-blend-mode: overlay; opacity: 0.95; }
+        .nav-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; border-radius: 12px; color: var(--text-light); text-decoration: none; font-size: 12px; font-weight: 500; border: none; background: transparent; cursor: pointer; transition: all 0.2s ease; }
+        .nav-button.active, .nav-button:hover { color: var(--primary-color); background-color: rgba(var(--primary-color-rgb), 0.1); }
+        .nav-button i { font-size: 20px; }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            align-items: center; 
+            justify-content: center; 
+            animation: fadeIn 0.3s ease-out; 
+        }
+        #bonusTasksModal {
+            align-items: stretch;
+            padding: 0;
+            justify-content: stretch;
+        }
+        #bonusTasksModal .modal-content { 
+            width: 100%; 
+            height: 100vh; 
+            max-width: none; 
+            max-height: none; 
+            margin: 0; 
+            border-radius: 0; 
+            overflow-y: auto; 
+            scrollbar-width: thin; 
+            scrollbar-color: var(--primary-color) transparent;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        .modal-content { 
+            background-color: var(--card-background); 
+            padding: 24px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            box-sizing: border-box; 
+            animation: slideIn 0.3s ease-out; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.95;
+        }
+        @keyframes slideIn { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close-button { color: #aaa; float: right; font-size: 28px; line-height: 1; font-weight: bold; cursor: pointer; }
+        .modal-content input, .modal-content select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Noto Sans', sans-serif; font-size: 16px; background-color: var(--background-color); color: var(--text-color); transition: border-color 0.2s, box-shadow 0.2s; }
+        .modal-content input:focus, .modal-content select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2); }
+        
+        #bonus-tasks-list .bonus-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 18px; 
+            background-color: var(--card-background); 
+            border-radius: 16px; 
+            margin-bottom: 15px; 
+            border: 2px solid var(--border-color); 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .bonus-item:hover { border-color: var(--primary-color); box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.2); }
+        .bonus-item .bonus-header { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .bonus-item .icon { font-size: 28px; margin-right: 0; }
+        .bonus-item .details { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+        .bonus-item .title { font-weight: 700; font-size: 16px; color: var(--text-color); margin: 0; }
+        .bonus-item .reward { font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 0; }
+        .bonus-item .reward i { margin-right: 6px; font-size: 16px; }
+        .bonus-item .claim-button { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            border-radius: 12px; 
+            background: var(--tomato-gradient); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            min-width: 100px;
+            box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+        }
+        .bonus-item .claim-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(var(--primary-color-rgb), 0.3); }
+        .bonus-item .claim-button:disabled { background-color: #8E8E93; cursor: not-allowed; transform: none; }
 
-        .action-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--tomato-gradient); color: white; font-size: 18px; font-weight: 700; cursor: pointer; }
-        .action-button:disabled { background: #8E8E93; cursor: not-allowed; }
+        /* VIP Item Style */
+        .vip-item { 
+            border: 2px solid gold !important; 
+            background: linear-gradient(135deg, #ffd700, #ffed4e) !important; 
+            color: #000 !important; 
+            animation: pulse 2s infinite;
+        }
+        .vip-item .title { color: #000 !important; font-weight: 800; }
+        .vip-item .reward { color: #000 !important; font-weight: 700; }
+        .vip-item .claim-button { background: #000 !important; color: gold !important; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 15px; background: var(--glass-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-color); z-index: 100; }
-        .nav-button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; color: var(--text-light); font-size: 12px; font-weight: 500; background: transparent; border: none; cursor: near; }
-        .nav-button.active, .nav-button:hover { color: var(--primary-color); }
-
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-background); padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
-        .close-button { float: right; font-size: 28px; cursor: pointer; }
-
-        .vip-badge-on-pic { position: absolute; bottom: 0; right: 0; background: #000; border-radius: 50%; padding: 2px; }
-        .vip-badge-on-pic img { width: 20px; height: 20px; }
+        .history-item { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .history-item:last-child { border-bottom: none; }
+        .history-details { display: flex; flex-direction: column; gap: 4px; }
+        .history-details .method-number { font-weight: 700; font-size: 16px; }
+        .history-details .date { font-size: 12px; color: var(--text-light); }
+        .history-amount { font-size: 18px; font-weight: 800; text-align: right; }
+        .history-status { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
+        .history-status.success { color: #28a745; background-color: rgba(40, 167, 69, 0.1); }
+        .history-status.pending { color: #fd7e14; background-color: rgba(253, 126, 20, 0.1); }
+        .no-history { text-align: center; padding: 40px 20px; color: var(--text-light); }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--secondary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: none; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--secondary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+        #ad-loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 15px; color: white; font-size: 16px; }
+        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--primary-color); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        #multiAccountModal .modal-content { text-align: center; border-radius: 20px; max-height: initial;}
+        #multiAccountModal { align-items: center; justify-content: center; }
+
+        /* Welcome Modal Special Style */
+        #welcomeModal .modal-content {
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 24px;
+            max-width: 380px;
+        }
+        #welcomeModal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--primary-color);
+        }
+        #welcomeModal p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 16px 0;
+            color: var(--text-color);
+        }
+        #welcomeModal .action-button {
+            background: var(--tomato-gradient) !important;
+            font-weight: 700;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+        }
+        #welcomeModal .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
+
+        /* Support Modal Styles */
+        #supportModal .support-section { text-align: left; margin-bottom: 20px; }
+        #supportModal .support-item { display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--card-background); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+        #supportModal .support-icon { font-size: 24px; color: var(--primary-color); width: 40px; }
+        #supportModal .support-text { flex: 1; font-weight: 600; }
+        #supportModal .support-button { padding: 10px 20px; border: none; border-radius: 8px; background: var(--tomato-gradient); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; min-width: 120px; }
+        #supportModal .support-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); }
+
+        /* Referral Balance Card Style */
+        .referral-card {
+            background: var(--tomato-gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-card::before {
+            content: '\f1e0';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            font-size: 80px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .referral-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .referral-card .balance-amount {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        .referral-card .threshold-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+        .referral-card .action-button {
+            background: white;
+            color: black;
+            font-weight: 700;
+        }
+        .referral-card .action-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Withdraw Modal Note Style - Highlighted Note */
+        .withdraw-note {
+            background: rgba(var(--primary-color-rgb), 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            position: relative;
+        }
+        .withdraw-note::before {
+            content: '📝';
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .withdraw-note.highlight {
+            box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Withdraw Modal Payment Methods Styles */
+        .payment-method-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 10px 0 15px 0;
+            color: var(--text-color);
+            text-align: left;
+        }
+        .payment-methods-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .payment-method-option {
+            flex: 1;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 15px 10px;
+            border: 2px solid var(--border-color);
+            background: var(--card-background);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .payment-method-option:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.1);
+        }
+        .payment-method-option:has(input:checked) {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+            background: rgba(var(--primary-color-rgb), 0.05);
+        }
+        .payment-method-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .method-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .method-logo {
+            width: 60px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .method-name {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        /* VIP Modal Styles */
+        #vipModal .modal-content {
+            max-width: 450px;
+        }
+        #vipModal .vip-package {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--card-background);
+            border-radius: 12px;
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        #vipModal .vip-package:hover {
+            border-color: gold;
+            box-shadow: 0 4px 12px rgba(255,215,0,0.2);
+        }
+        #vipModal .vip-package.selected {
+            border-color: gold;
+            background: rgba(255,215,0,0.1);
+        }
+        #payment-guide {
+            background: rgba(255,215,0,0.1);
+            border: 1px solid gold;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -86,87 +430,162 @@
         <i class="fa-solid fa-spinner"></i>
         <div id="preloader-percentage">0%</div>
     </div>
-
+    <div id="preloader-footer">
+        <a href="#" target="_blank">Developed By SAKIB HOSSAIN</a>
+    </div>
+    
+    <div id="ad-loader-overlay"><div class="loader"></div><span>Loading Ad...</span></div>
+    
     <div class="container">
-        <div class="profile-header">
-            <div id="profile-pic"><i class="fa-solid fa-user"></i></div>
-            <h1 id="greeting">Welcome!</h1>
-            <div id="vip-badge-container" style="display: none; margin-left: auto;">
-                <span style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">
-                    <i class="fa-solid fa-crown"></i> VIP
-                </span>
-            </div>
-        </div>
-
-        <div class="balance-card">
-            <h3>Your Balance</h3>
-            <div class="amount" id="total-earning">৳0.00</div>
-        </div>
-
+        <div class="profile-header"><div id="profile-pic"><i class="fa-solid fa-user"></i></div><h1 id="greeting">Welcome!</h1></div>
+        <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
         <div class="stats-grid">
-            <div class="stat-item">
-                <div class="value" id="ad-count">0</div>
-                <div class="label">Ads Watched</div>
-            </div>
-            <div class="stat-item">
-                <div class="value" id="ads-today-count">0 / 15</div>
-                <div class="label">Today's Ads</div>
-            </div>
-            <div class="stat-item">
-                <div class="value" id="referral-count">0</div>
-                <div class="label">Referrals</div>
-            </div>
+            <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">Ads Watched</div></div>
+            <div class="stat-item"><i class="fa-solid fa-calendar-day bg-icon"></i><div class="icon"><i class="fa-solid fa-calendar-day"></i></div><div class="value" id="ads-today-count">0 / 15</div><div class="label">Today's Ads</div></div>
+            <div class="stat-item"><i class="fa-solid fa-users bg-icon"></i><div class="icon"><i class="fa-solid fa-users"></i></div><div class="value" id="referral-count">0</div><div class="label">Referrals</div></div>
         </div>
-
-        <!-- VIP SECTION (Admin Controlled) -->
-        <div id="vipSection" class="card" style="border: 2px solid #FFD700; background: linear-gradient(135deg, #FFD700, #FFA500);">
-            <h3 class="card-title" style="color: #000; display: flex; align-items: center; gap: 8px;">
-                <img src="https://i.ibb.co.com/3d3yY9K/vip-crown.gif" alt="VIP" style="width: 28px; height: 28px;"> VIP Membership
-            </h3>
-            <div id="vip-packages-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-                <!-- Loaded from Firebase -->
-            </div>
-            <button class="action-button" id="buy-vip-button" style="background: #000; color: #FFD700; font-weight: 800;">
-                <i class="fa-solid fa-crown"></i> Buy VIP Now
-            </button>
-        </div>
-
-        <div class="card">
-            <h3 class="card-title">Today's Task</h3>
-            <button class="action-button" id="watch-ad-button"><i class="fa-solid fa-play"></i> Watch Ad</button>
+        <div class="card"><h3 class="card-title">Today's Task</h3><button class="action-button" id="watch-ad-button"><i class="fa-solid fa-play"></i><span>Watch Ad</span></button><button class="action-button secondary-button" id="join-channel-button"><i class="fa-brands fa-telegram"></i><span>Join Channel</span></button></div>
+        <div class="card"><h3 class="card-title">Weekly Activity</h3><div class="chart-container"><canvas id="activityChart"></canvas></div></div>
+    </div>
+    <div class="nav-bar">
+        <button class="nav-button" onclick="showModal('withdrawModal', this)"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></button>
+        <button class="nav-button" onclick="showModal('historyModal', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></button>
+        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>Refer</span></button>
+        <button class="nav-button" onclick="showModal('supportModal', this)"><i class="fa-solid fa-headset"></i><span>Support</span></button>
+        <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('welcomeModal')">&times;</span>
+            <h3 id="welcome-title" class="card-title"></h3>
+            <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
+            <button class="action-button" onclick="closeModal('welcomeModal')">আমি বুঝেছি</button>
         </div>
     </div>
-
-    <!-- VIP Purchase Modal -->
-    <div id="vipPurchaseModal" class="modal">
+    
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="closeModal('vipPurchaseModal')">&times;</span>
-            <h3 style="color: #FFD700; display: flex; align-items: center; gap: 8px;">
-                <img src="https://i.ibb.co.com/3d3yY9K/vip-crown.gif" alt="VIP" style="width: 32px; height: 32px;"> Buy VIP
-            </h3>
-            <div style="background: #000; color: #FFD700; padding: 15px; border-radius: 12px; text-align: left; font-weight: 600;">
-                <p><strong>Send To:</strong> <code style="background: #333; color: #FFD700; padding: 4px 8px; border-radius: 6px;">01925723245</code>
-                    <button onclick="copyPaymentNumber()" style="margin-left: 8px; padding: 4px 8px; font-size: 12px; background: #FFD700; color: #000; border: none; border-radius: 6px; font-weight: 700;">Copy</button>
-                </p>
-                <p><strong>Method:</strong> Bkash / Nagad</p>
-            </div>
-            <form id="vip-request-form">
-                <select id="vip-package-select" required style="margin: 12px 0; padding: 12px; width: 100%; border-radius: 8px;"></select>
-                <input type="text" id="transaction-id" placeholder="Transaction ID" required>
-                <input type="text" id="user-tg-id" placeholder="Your TG ID" readonly>
-                <button type="submit" class="action-button" style="background: #000; color: #FFD700; margin-top: 15px;">
-                    <span>Send Request</span>
-                    <div class="spinner"></div>
+            <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
+            <h3 class="card-title">Withdraw Funds</h3>
+            <p id="min-withdraw-text"></p>
+            <div id="referral-requirement-note" class="withdraw-note highlight"></div>
+            <form id="withdraw-form">
+                <h4 class="payment-method-header">Payment Method</h4>
+                <div id="payment-methods-container" class="payment-methods-container"></div>
+                <input type="text" id="account-number" placeholder="Enter Account Number" required>
+                <input type="number" step="0.01" id="withdraw-amount" placeholder="Amount in BDT" required>
+                <button type="submit" class="action-button" id="withdraw-submit-button">
+                    <span class="button-text">Submit Request</span>
+                    <div class="spinner" style="display: none;"></div>
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- VIP Modal -->
+    <div id="vipModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('vipModal')">&times;</span>
+            <h3 class="card-title" style="color: gold; text-shadow: 0 0 10px rgba(255,215,0,0.5);">VIP Membership</h3>
+            <div id="vip-packages" style="margin-bottom: 20px;"></div>
+            <div id="payment-guide" style="display: none;">
+                <p style="margin: 0 0 10px; font-weight: 600; color: var(--text-color);">Send Payment to:</p>
+                <p style="font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 5px 0;">Bkash/Nagad: <strong>01925723245</strong></p>
+                <button class="action-button secondary-button" onclick="copyPaymentNumber()" style="margin: 10px 0; padding: 10px;">
+                    <i class="fa-solid fa-copy"></i> Copy Number
+                </button>
+                <input type="text" id="txid-input" placeholder="Enter Transaction ID *" style="margin: 10px 0; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;" required>
+                <button class="action-button" id="vip-request-btn" onclick="sendVIPRequest(selectedPackage)">
+                    <span>Send VIP Request</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+                <p style="font-size: 12px; color: var(--text-light); margin-top: 10px;">Admin will approve within 1 hour after verification.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="supportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('supportModal')">&times;</span>
+            <h3 class="card-title">Support</h3>
+            <div class="support-section">
+                <div class="support-item">
+                    <i class="fa-solid fa-user-tie support-icon"></i>
+                    <span class="support-text">সাপোর্ট এডমিন</span>
+                    <button class="support-button" onclick="openSupportLink()">সাপোর্ট</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-video support-icon"></i>
+                    <span class="support-text">টিউটরিয়াল</span>
+                    <button class="support-button" onclick="openTutorialLink()">Watch টিউটরিয়াল</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-brands fa-telegram support-icon"></i>
+                    <span class="support-text">আমাদের টেলিগ্রাম গ্রোপ</span>
+                    <button class="support-button" onclick="openGroupLink()">Join Group</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-receipt support-icon"></i>
+                    <span class="support-text">পেমেন্ট প্রুফ এর টেলিগ্রাম চেনেল</span>
+                    <button class="support-button" onclick="openPaymentProofLink()">View Channel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('inviteModal')">&times;</span>
+            <h3 class="card-title">Invite Friends</h3>
+            <p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p>
+            <div class="referral-card">
+                <h4>Referral Balance</h4>
+                <div class="balance-amount" id="referral-balance-text">৳0.00</div>
+                <p class="threshold-note">Minimum ৳100 required to add to main balance</p>
+                <button class="action-button" id="add-to-main-balance"><i class="fa-solid fa-plus"></i><span>Add to Main Balance</span></button>
+            </div>
+            <button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button>
+            <button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button>
+        </div>
+    </div>
+    <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards! Remember to join/subscribe before claiming.</p><div id="bonus-tasks-list"></div></div></div>
+    
+    <!-- Multi Account Warning (Bengali) -->
+    <div id="multiAccountModal" class="modal">
+        <div class="modal-content">
+            <h3 class="card-title" style="color: #ff4444;">সতর্কতা</h3>
+            <p style="font-size: 15px; line-height: 1.7;">
+                একাধিক অ্যাকাউন্ট অনুমোদিত নয়।<br>
+                এই ডিভাইসে শুধুমাত্র একটি টেলিগ্রাম অ্যাকাউন্ট ব্যবহার করা যাবে।<br>
+                দয়া করে আপনার মূল অ্যাকাউন্ট দিয়ে চালিয়ে যান।
+            </p>
+        </div>
+    </div>
+
     <script>
-        // --- CONFIG ---
+        // --- CONFIGURATION (UPDATED FOR BDT) ---
         const config = {
             BOT_TOKEN: '8592541498:AAHn5vYf8qlMuVrBt_OIbR8VhdG0gGO3vOA',
             ADMIN_IDS: [7731349577],
+            BOT_USERNAME: 'red_tomato_earning_bot',
+            TELEGRAM_CHANNEL_LINK: 'https://t.me/tomato_payment',
+            ADMIN_SUPPORT_LINK: 'https://t.me/tomato_admin_bot',
+            TUTORIAL_LINK: 'https://www.youtube.com/@shakibexplainer',
+            GROUP_LINK: 'https://t.me/shakibexplainer',
+            PAYMENT_PROOF_LINK: 'https://t.me/tomato_payment', // Placeholder, update as needed
+            MONETAG_ZONE_ID: '10072766',
+            AD_REWARD: 5, // ৳5 per ad
+            DAILY_AD_LIMIT: 15,
+            MINIMUM_WITHDRAWAL: 500, // ৳500
+            MIN_REFERRALS_FOR_WITHDRAW: 15,
+            COOLDOWN_MINUTES: 1440,
+            REFERRAL_MIN_ADD: 100, // Minimum 100 BDT to add to main balance
+            MIN_AD_EARNING_FOR_WITHDRAW: 500, // Minimum ad earning in main balance for withdraw
+            withdrawalMethods: ['Bkash', 'Nagad'],
+            PAYMENT_NUMBER: '01925723245',
             firebase: {
                 apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
                 authDomain: "st-project-taka-kamao.firebaseapp.com",
@@ -174,149 +593,630 @@
                 projectId: "st-project-taka-kamao",
                 storageBucket: "st-project-taka-kamao.firebasestorage.app",
                 messagingSenderId: "151575920757",
-                appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c"
+                appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
+                measurementId: "G-V0QDHQ27L3"
+            },
+            REFERRAL_REWARD: 50, // ৳50 per referral
+            VIP_PACKAGES: [
+                { id: 'vip_100', name: 'VIP Basic', price: 100, dailyAds: 20, validityDays: 7 },
+                { id: 'vip_200', name: 'VIP Pro', price: 200, dailyAds: 30, validityDays: 10 }
+            ],
+            bonusTasks: [
+                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_03', title: 'YouTube চ্যানেল Subscribe করুন', link: 'https://youtube.com/@experthoiacademy?si=JzntArQaysuDys7R', reward: 10, duration: 30, icon: 'fa-brands fa-youtube' },
+                { id: 'bonus_04', title: 'Facebook Page Follow করুন', link: 'https://www.facebook.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-facebook' },
+                { id: 'bonus_05', title: 'আরেকটি চ্যানেল জয়েন করুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_06', title: 'Instagram Follow করুন', link: 'https://www.instagram.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-instagram' }
+            ],
+            welcomeNotice: {
+                title: "Welcome!",
+                message: "Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৫ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
             }
         };
 
-        const tg = window.Telegram.WebApp;
-        let db, state = { totalEarning: 0, adCount: 0, adsWatchedToday: 0, vip: { active: false, dailyLimit: 15 } };
-        let vipPackages = [];
+        // --- MAIN APP LOGIC ---
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null };
+        const dbName = 'AdBotAppDB'; let db;
+        let firebaseApp, firebaseDb;
+        let selectedPackage = null;
 
-        // --- INIT FIREBASE ---
-        firebase.initializeApp(config.firebase);
-        db = firebase.database();
-
-        // --- DOM ---
-        const els = {
-            totalEarning: document.getElementById('total-earning'),
-            adCount: document.getElementById('ad-count'),
-            adsTodayCount: document.getElementById('ads-today-count'),
-            buyVipBtn: document.getElementById('buy-vip-button'),
-            vipBadge: document.getElementById('vip-badge-container'),
-            profilePic: document.getElementById('profile-pic'),
-            vipPackagesContainer: document.getElementById('vip-packages-container'),
-            vipSelect: document.getElementById('vip-package-select'),
-            userTgId: document.getElementById('user-tg-id')
+        const allDOMElements = { 
+            preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
+            container: document.querySelector('.container'), totalEarningEl: document.getElementById('total-earning'), adCountEl: document.getElementById('ad-count'), 
+            adsTodayCountEl: document.getElementById('ads-today-count'), referralCountEl: document.getElementById('referral-count'), watchAdButton: document.getElementById('watch-ad-button'), 
+            withdrawForm: document.getElementById('withdraw-form'), adLoaderOverlay: document.getElementById('ad-loader-overlay'), profilePicEl: document.getElementById('profile-pic'), 
+            greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), adminContactButton: document.getElementById('admin-contact-button'), 
+            copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
+            bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
         };
+        
+        function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
+        function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
-        // --- LOAD VIP PACKAGES ---
-        function loadVipPackages() {
-            db.ref('admin/vip_packages').on('value', snap => {
-                vipPackages = Object.values(snap.val() || {});
-                renderVipPackages();
-                renderVipSelect();
+        function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
+        function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
+        function escapeHTML(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        function populateWithdrawalMethods() {
+            const container = document.getElementById('payment-methods-container');
+            if (!container) return;
+            container.innerHTML = '';
+            config.withdrawalMethods.forEach(method => {
+                const label = document.createElement('label');
+                label.className = 'payment-method-option';
+                const imgSrc = method === 'Bkash' ? 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/ae7a61c76f251a0a2d3ba80b7c98a8342c2991b3/20251104_125237.png' : 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/ae7a61c76f251a0a2d3ba80b7c98a8342c2991b3/20251104_125257.png';
+                const alt = method;
+                label.innerHTML = `
+                    <input type="radio" name="method" value="${method}" required>
+                    <div class="method-content">
+                        <img src="${imgSrc}" alt="${alt}" class="method-logo">
+                        <span class="method-name">${method}</span>
+                    </div>
+                `;
+                container.appendChild(label);
             });
         }
 
-        function renderVipPackages() {
-            els.vipPackagesContainer.innerHTML = '';
-            vipPackages.forEach(p => {
+        let cooldownInterval;
+        function updateUI() {
+            allDOMElements.referralCountEl.textContent = state.referralCount;
+            allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
+            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
+            allDOMElements.referralRequirementNote.innerHTML = `<strong>নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
+            if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
+            allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
+            allDOMElements.adCountEl.textContent = state.adCount;
+            const dailyLimit = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+            allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${dailyLimit}`;
+            
+            clearInterval(cooldownInterval);
+            const watchAdButton = allDOMElements.watchAdButton;
+            if (state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
+                watchAdButton.disabled = true;
+                const updateTimer = () => {
+                    const remainingMs = new Date(state.cooldownUntil) - new Date();
+                    if (remainingMs <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; saveState(); updateUI(); safeTgAlert(`Your break is over!`); } 
+                    else { 
+                        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                        watchAdButton.querySelector('span').textContent = `Break: ${hours}h ${minutes}m ${seconds}s`; 
+                    }
+                };
+                cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
+            } else {
+                watchAdButton.disabled = state.adsWatchedToday >= dailyLimit;
+                watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= dailyLimit ? 'Take a Break' : 'Watch Ad';
+            }
+            watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
+
+            // VIP Badge
+            const profilePic = allDOMElements.profilePicEl;
+            if (state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry)) {
+                if (!profilePic.querySelector('.vip-badge')) {
+                    const badge = document.createElement('img');
+                    badge.src = 'https://i.ibb.co/7zYkJ3K/vip-crown.gif';
+                    badge.className = 'vip-badge';
+                    profilePic.appendChild(badge);
+                }
+            } else {
+                const existingBadge = profilePic.querySelector('.vip-badge');
+                if (existingBadge) existingBadge.remove();
+            }
+            updateChart();
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('activityChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const fontColor = isDark ? '#F5F5F7' : '#1D1D1F';
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(context, { 
+                type: 'bar', 
+                data: { 
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 
+                    datasets: [{ 
+                        label: 'Ads Watched', 
+                        data: state.weeklyActivity, 
+                        backgroundColor: 'rgba(var(--primary-color-rgb), 0.2)', 
+                        borderColor: 'rgb(var(--primary-color-rgb))', 
+                        borderWidth: 2, 
+                        borderRadius: 8, 
+                        hoverBackgroundColor: 'rgba(var(--primary-color-rgb), 0.4)' 
+                    }] 
+                }, 
+                options: { 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 5, color: fontColor }, grid: { color: gridColor } }, 
+                        x: { ticks: { color: fontColor }, grid: { color: gridColor } } 
+                    }, 
+                    plugins: { legend: { display: false } }, 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                } 
+            });
+        }
+        
+        async function watchAd() {
+            const dailyLimit = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+            if (state.adsWatchedToday >= dailyLimit) {
+                safeTgAlert('Daily limit reached. Take a break!');
+                return;
+            }
+            allDOMElements.adLoaderOverlay.style.display = 'flex';
+            const adFunction = window[`show_${config.MONETAG_ZONE_ID}`];
+            if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
+            adFunction().then(() => {
+                state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
+                let alertMessage = `Ad watched! You have ${dailyLimit - state.adsWatchedToday} ads left today.`;
+                if (state.adsWatchedToday >= dailyLimit) {
+                    const cdDate = new Date();
+                    cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
+                    state.cooldownUntil = cdDate.toISOString();
+                    alertMessage = `Daily tasks completed! Take a 24-hour break.`;
+                }
+                saveState(); updateUI();
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                safeTgAlert(alertMessage);
+            }).catch(e => { console.error("Monetag Ad Error:", e); safeTgAlert('Ad could not be completed. Please try again.'); })
+            .finally(() => { allDOMElements.adLoaderOverlay.style.display = 'none'; });
+        }
+        
+        async function handleWithdrawal(event) {
+            event.preventDefault();
+            if (state.referralCount < config.MIN_REFERRALS_FOR_WITHDRAW) {
+                safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`);
+                return;
+            }
+            const { withdrawForm } = allDOMElements;
+            const submitButton = document.getElementById('withdraw-submit-button');
+            const buttonText = submitButton.querySelector('.button-text');
+            const spinner = submitButton.querySelector('.spinner');
+            const selectedMethodInput = withdrawForm.querySelector('input[name="method"]:checked');
+            const method = selectedMethodInput ? selectedMethodInput.value : null;
+            if (!method) {
+                safeTgAlert('Please select a payment method.');
+                return;
+            }
+            const amount = parseFloat(withdrawForm.elements['withdraw-amount'].value);
+            const accountNumber = withdrawForm.elements['account-number'].value;
+            
+            // Check if main balance (from ads) is at least 500
+            if (state.totalEarning < config.MIN_AD_EARNING_FOR_WITHDRAW) {
+                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন। রেগুলার ads দেখে ইনকাম করুন এবং আপনার অ্যাকাউন্টকে সক্রিয় রাখুন!');
+                return;
+            }
+            
+            if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
+            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
+
+            buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
+            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
+            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> ৳${amount.toFixed(2)}`;
+            try {
+                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
+                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
+                const results = await Promise.all(promises);
+                if (results.some(r => r.ok)) {
+                    state.totalEarning -= amount;
+                    const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
+                    state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
+                    saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
+                    safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed within 2 hours.');
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                } else { throw new Error(JSON.stringify(results)); }
+            } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
+            finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
+        }
+        
+        function checkPendingWithdrawals() {
+            let changed = false;
+            state.withdrawalHistory.forEach(item => {
+                if (item.status === 'Pending' && new Date().getTime() > item.pendingUntil) {
+                    item.status = 'Success';
+                    changed = true;
+                }
+            });
+            if (changed) {
+                saveState();
+                if (document.getElementById('historyModal').style.display === 'flex') {
+                    renderHistory();
+                }
+            }
+        }
+        
+        function renderHistory() {
+            checkPendingWithdrawals();
+            const { historyListEl } = allDOMElements;
+            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; return; }
+            historyListEl.innerHTML = state.withdrawalHistory.map(item => `
+                <div class="history-item">
+                    <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
+                    <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
+                </div>`).join('');
+        }
+
+        function renderVIPOption() {
+            const bonusTasksListEl = allDOMElements.bonusTasksListEl;
+            const vipItem = document.createElement('div');
+            vipItem.className = 'bonus-item vip-item';
+            const status = state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry) ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
+            vipItem.innerHTML = `
+                <div class="bonus-header">
+                    <img src="https://i.ibb.co/7zYkJ3K/vip-crown.gif" alt="VIP" class="icon" style="width: 32px; height: 32px;">
+                    <div class="details">
+                        <h4 class="title">VIP Membership</h4>
+                        <p class="reward"><i class="fa-solid fa-crown"></i> Unlock More Ads & Earnings!</p>
+                    </div>
+                </div>
+                <button class="claim-button" onclick="openVIPModal()" ${status === 'Active' ? 'disabled' : ''} style="background: ${status === 'Active' ? 'gold' : '#000'}; color: ${status === 'Active' ? '#000' : 'gold'};">
+                    ${status}
+                </button>
+            `;
+            bonusTasksListEl.insertBefore(vipItem, bonusTasksListEl.firstChild);
+        }
+
+        function renderBonusTasks() {
+            const { bonusTasksListEl } = allDOMElements;
+            bonusTasksListEl.innerHTML = '';
+            renderVIPOption(); // VIP at top
+            if (config.bonusTasks.length === 0) { bonusTasksListEl.innerHTML += '<p class="no-history">No bonus tasks are available right now.</p>'; return; }
+            config.bonusTasks.forEach(task => {
+                const isCompleted = state.completedBonusTasks.includes(task.id);
+                const item = document.createElement('div');
+                item.className = 'bonus-item';
+                let iconColor = 'var(--primary-color)';
+                if (task.icon.includes('youtube')) iconColor = '#FF0000';
+                else if (task.icon.includes('facebook')) iconColor = '#1877F2';
+                else if (task.icon.includes('instagram')) iconColor = '#E4405F';
+                item.innerHTML = `
+                    <div class="bonus-header">
+                        <i class="${task.icon} icon" style="color: ${iconColor};"></i>
+                        <div class="details">
+                            <h4 class="title">${escapeHTML(task.title)}</h4>
+                            <p class="reward"><i class="fa-solid fa-gift"></i> + ৳${task.reward.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Completed' : 'Claim Now'}</button>
+                `;
+                if (!isCompleted) { item.querySelector('.claim-button').addEventListener('click', (e) => handleBonusTask(task, e.target)); }
+                bonusTasksListEl.appendChild(item);
+            });
+        }
+
+        function handleBonusTask(task, button) {
+            safeTgAlert('Please join/subscribe to the group/channel and return to claim the bonus. You will be redirected...');
+            button.disabled = true; button.textContent = 'Waiting for Verification...';
+            safeTgAction(tg => tg.openLink(task.link));
+            setTimeout(() => {
+                if (state.completedBonusTasks.includes(task.id)) return;
+                // Simulate verification - in real app, check via bot if joined
+                safeTgAlert('Verification complete! Bonus claimed. (Note: Actual join required in production)');
+                state.totalEarning += task.reward;
+                state.completedBonusTasks.push(task.id);
+                saveState(); updateUI(); button.textContent = 'Completed ✓';
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+            }, task.duration * 1000);
+        }
+
+        function openVIPModal() {
+            showModal('vipModal');
+            const container = document.getElementById('vip-packages');
+            const guide = document.getElementById('payment-guide');
+            container.innerHTML = '';
+            guide.style.display = 'none';
+
+            if (state.isVIP && state.vipPackage && new Date() < new Date(state.vipExpiry)) {
+                container.innerHTML = `<p style="text-align:center; font-weight:700; color:gold; font-size:16px;">
+                    <i class="fa-solid fa-crown"></i> You are a ${state.vipPackage.name} Member!<br>
+                    Expires: ${new Date(state.vipExpiry).toLocaleDateString()}<br><br>
+                    <small style="color:var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day!</small>
+                </p>`;
+                return;
+            }
+
+            if (state.vipRequested) {
+                container.innerHTML = `<p style="text-align:center; color:orange; font-weight:600;">
+                    <i class="fa-solid fa-clock"></i> VIP Request Pending<br>
+                    <small style="color:var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</small>
+                </p>`;
+                return;
+            }
+
+            config.VIP_PACKAGES.forEach(pkg => {
                 const div = document.createElement('div');
-                div.className = 'stat-item';
-                div.innerHTML = `<div class="value" style="font-size:20px;color:#000;">৳${p.price}</div><div class="label">${p.ads} Ads/Day</div><div class="label" style="font-size:12px;color:#555;">${p.days} Days</div>`;
-                els.vipPackagesContainer.appendChild(div);
+                div.className = 'vip-package';
+                div.onclick = () => {
+                    selectedPackage = pkg;
+                    document.querySelectorAll('.vip-package').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    document.getElementById('payment-guide').style.display = 'block';
+                };
+                div.innerHTML = `
+                    <div style="flex:1; text-align:left;">
+                        <h4 style="margin:0; font-weight:700; color:var(--text-color);">${pkg.name}</h4>
+                        <p style="margin:5px 0; color:var(--text-light); font-size:14px;">
+                            <i class="fa-solid fa-play"></i> ${pkg.dailyAds} Ads/Day • <i class="fa-solid fa-calendar"></i> ${pkg.validityDays} Days
+                        </p>
+                    </div>
+                    <div style="text-align:right; font-weight:800; font-size:20px; color:gold;">৳${pkg.price}</div>
+                `;
+                container.appendChild(div);
             });
         }
 
-        function renderVipSelect() {
-            els.vipSelect.innerHTML = '<option value="">Select Package</option>';
-            vipPackages.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = `${p.price}_${p.ads}_${p.days}`;
-                opt.textContent = `৳${p.price} - ${p.ads} Ads/Day (${p.days} Days)`;
-                els.vipSelect.appendChild(opt);
-            });
+        function copyPaymentNumber() {
+            navigator.clipboard.writeText(config.PAYMENT_NUMBER).then(() => safeTgAlert('Payment number copied!'));
         }
 
-        // --- VIP STATUS ---
-        function updateVIPStatus() {
+        async function sendVIPRequest(pkg) {
+            const txid = document.getElementById('txid-input').value.trim();
+            if (!txid) return safeTgAlert('Enter Transaction ID');
+            if (!pkg) return safeTgAlert('Select a package first');
+
+            const btn = document.getElementById('vip-request-btn');
+            const text = btn.querySelector('span');
+            const spinner = btn.querySelector('.spinner');
+            text.style.display = 'none'; spinner.style.display = 'block'; btn.disabled = true;
+
+            try {
+                const user = tg.initDataUnsafe.user;
+                await firebaseDb.ref(`vip_requests/${user.id}`).set({
+                    userId: user.id,
+                    username: user.username || 'N/A',
+                    name: `${user.first_name} ${user.last_name || ''}`,
+                    packageId: pkg.id,
+                    price: pkg.price,
+                    txid: txid,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending'
+                });
+                state.vipRequested = true;
+                state.vipRequestTxId = txid;
+                saveState();
+                safeTgAlert('VIP Request sent! Admin will approve after verification.');
+                closeModal('vipModal');
+            } catch (e) {
+                console.error(e);
+                safeTgAlert('Failed to send request. Try again.');
+            } finally {
+                text.style.display = 'inline'; spinner.style.display = 'none'; btn.disabled = false;
+            }
+        }
+
+        function showModal(modalId, buttonEl) {
+            document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active'));
+            if (buttonEl) buttonEl.classList.add('active');
+            if (modalId === 'historyModal') renderHistory();
+            if (modalId === 'bonusTasksModal') renderBonusTasks();
+            if (modalId === 'inviteModal') updateUI();
+            if (modalId === 'withdrawModal') { populateWithdrawalMethods(); updateUI(); }
+            const modal = document.getElementById(modalId);
+            if(modal) modal.style.display = 'flex';
+        }
+        function closeModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; if (modalId !== 'welcomeModal') { document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active')); } }
+        function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
+        function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
+        function shareReferralLink() { 
+            const link = getReferralLink();
+            const text = `🍅💸 Tomato ইনকাম বট 💸🍅\nআমি প্রতিদিন Tomato বট থেকে ইনকাম করছি! 😎\nতুমিও চাইলে আজই শুরু করতে পারো 💰\n👇 এখানে জয়েন করো 👇\n🔗 ${link}`; 
+            safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
+        }
+
+        function addToMainBalance() {
+            if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
+                const addedAmount = state.referralBalance;
+                state.totalEarning += state.referralBalance;
+                state.referralBalance = 0;
+                saveState();
+                updateUI();
+                safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+            } else {
+                safeTgAlert(`Minimum ৳${config.REFERRAL_MIN_ADD} required to add to main balance. Current: ৳${state.referralBalance.toFixed(2)}`);
+            }
+        }
+
+        // Support Links Functions
+        function openSupportLink() { safeTgAction(tg => tg.openLink(config.ADMIN_SUPPORT_LINK)); }
+        function openTutorialLink() { safeTgAction(tg => tg.openLink(config.TUTORIAL_LINK)); }
+        function openGroupLink() { safeTgAction(tg => tg.openTelegramLink(config.GROUP_LINK)); }
+        function openPaymentProofLink() { safeTgAction(tg => tg.openTelegramLink(config.PAYMENT_PROOF_LINK)); }
+        
+        function initFirebase() { try { firebase.initializeApp(config.firebase); firebaseDb = firebase.database(); } catch (e) { console.error("Firebase initialization failed:", e); } }
+
+        async function handleReferral() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const startParam = tg.initDataUnsafe.start_param;
+            const currentUser = tg.initDataUnsafe.user;
+            if (!startParam || isNaN(parseInt(startParam)) || parseInt(startParam) === currentUser.id) return;
+            
+            const referrerId = parseInt(startParam);
+            const referredUserRef = firebaseDb.ref(`users/${currentUser.id}/referred_by`);
+            const snapshot = await referredUserRef.once('value');
+            if (snapshot.exists()) return;
+
+            await referredUserRef.set(referrerId);
+            const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
+            await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
+
+            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus next time you open the app.`;
+            await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
+        }
+
+        async function processReferralRewards() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            db.ref(`vip/${userId}`).on('value', snap => {
-                const vip = snap.val();
-                if (vip && vip.active && new Date(vip.expiresAt) > new Date()) {
-                    state.vip = vip;
-                    els.adsTodayCount.textContent = `${state.adsWatchedToday} / ${vip.dailyLimit}`;
-                    els.buyVipBtn.textContent = 'VIP Active';
-                    els.buyVipBtn.disabled = true;
-                    els.vipBadge.style.display = 'block';
-                    addVipBadgeToPic();
+            const referralsRef = firebaseDb.ref(`users/${userId}/referrals`);
+            const snapshot = await referralsRef.once('value');
+            const totalReferrals = snapshot.val() || 0;
+
+            const rewardedReferrals = state.rewardedReferrals || 0;
+            const newReferrals = totalReferrals - rewardedReferrals;
+
+            if (newReferrals > 0) {
+                const bonus = newReferrals * config.REFERRAL_REWARD;
+                state.referralBalance += bonus;
+                state.rewardedReferrals = totalReferrals;
+                state.referralCount = totalReferrals;
+                saveState();
+                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)! It has been added to your Referral Balance.`);
+            } else {
+                state.referralCount = totalReferrals;
+            }
+        }
+
+        async function listenForReferralCount() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            const referralsRef = firebaseDb.ref(`users/${userId}/referrals`);
+            referralsRef.on('value', (snapshot) => { 
+                const count = snapshot.val() || 0;
+                state.referralCount = count;
+                updateUI();
+            });
+        }
+
+        async function listenForVIPStatus() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.active && new Date(data.expiry) > new Date()) {
+                    const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
+                    if (pkg) {
+                        state.isVIP = true;
+                        state.vipPackage = pkg;
+                        state.vipExpiry = data.expiry;
+                        state.vipRequested = false;
+                        saveState();
+                        updateUI();
+                        safeTgAlert(`VIP ${pkg.name} activated! Enjoy ${pkg.dailyAds} ads/day for ${pkg.validityDays} days.`);
+                    }
                 } else {
-                    state.vip = { active: false, dailyLimit: 15 };
-                    els.adsTodayCount.textContent = `${state.adsWatchedToday} / 15`;
-                    els.buyVipBtn.textContent = 'Buy VIP Now';
-                    els.buyVipBtn.disabled = false;
-                    els.vipBadge.style.display = 'none';
-                    removeVipBadgeFromPic();
+                    state.isVIP = false;
+                    state.vipPackage = null;
+                    state.vipExpiry = null;
+                    saveState();
+                    updateUI();
                 }
             });
         }
 
-        function addVipBadgeToPic() {
-            if (document.getElementById('vip-badge-on-pic')) return;
-            const badge = document.createElement('div');
-            badge.id = 'vip-badge-on-pic';
-            badge.className = 'vip-badge-on-pic';
-            badge.innerHTML = '<img src="https://i.ibb.co.com/3d3yY9K/vip-crown.gif" alt="VIP">';
-            els.profilePic.appendChild(badge);
+        function loadMonetagSDK() {
+            const script = document.createElement('script');
+            script.src = `//libtl.com/sdk.js`;
+            script.setAttribute('data-zone', config.MONETAG_ZONE_ID);
+            script.setAttribute('data-sdk', `show_${config.MONETAG_ZONE_ID}`);
+            script.async = true;
+            document.body.appendChild(script);
         }
 
-        function removeVipBadgeFromPic() {
-            const badge = document.getElementById('vip-badge-on-pic');
-            if (badge) badge.remove();
-        }
+        async function initApp() {
+            let appReady = false;
+            let preloaderAnimationDone = false;
+            
+            const tryFinishLoading = () => {
+                if(appReady && preloaderAnimationDone) {
+                    allDOMElements.preloader.style.opacity = '0';
+                    allDOMElements.preloaderFooter.style.opacity = '0';
+                    setTimeout(() => {
+                        allDOMElements.preloader.style.display = 'none';
+                        allDOMElements.preloaderFooter.style.display = 'none';
+                        allDOMElements.container.style.display = 'block';
+                    }, 500);
+                }
+            };
 
-        // --- VIP PURCHASE ---
-        document.getElementById('vip-request-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            const pkg = els.vipSelect.value;
-            const txid = document.getElementById('transaction-id').value.trim();
-            const user = tg.initDataUnsafe.user;
-            if (!pkg || !txid) return alert('Fill all fields!');
-
-            const [price, ads, days] = pkg.split('_');
-            const req = { userId: user.id, username: user.username || 'N/A', first_name: user.first_name, package: `${price} BDT - ${ads} Ads/Day (${days} Days)`, txid, price: +price, ads: +ads, days: +days, requestedAt: new Date().toISOString(), status: 'pending' };
-
-            const btn = e.target.querySelector('button');
-            btn.querySelector('span').style.display = 'none';
-            btn.querySelector('.spinner').style.display = 'inline-block';
-            btn.disabled = true;
+            let percentage = 0;
+            const interval = setInterval(() => {
+                percentage += Math.floor(Math.random() * 5) + 1;
+                if (percentage > 100) percentage = 100;
+                allDOMElements.preloaderPercentage.textContent = `${percentage}%`;
+                if (percentage >= 100) {
+                    clearInterval(interval);
+                    preloaderAnimationDone = true;
+                    tryFinishLoading();
+                }
+            }, 60);
 
             try {
-                await db.ref(`vip_requests/${user.id}_${Date.now()}`).set(req);
-                await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: config.ADMIN_IDS[0], text: `<b>NEW VIP REQUEST</b>\nUser: ${req.first_name} (@${req.username})\nPackage: ${req.package}\nTxID: <code>${txid}</code>`, parse_mode: 'HTML' })
+                loadMonetagSDK(); 
+                initFirebase();
+               
+                populateWithdrawalMethods();
+
+                allDOMElements.welcomeTitle.textContent = config.welcomeNotice.title;
+                allDOMElements.welcomeMessage.textContent = config.welcomeNotice.message;
+
+                await initDB(); 
+                await loadState();
+
+                const currentUserId = tg ? tg.initDataUnsafe?.user?.id : null;
+                if (currentUserId) {
+                    if (!state.originalUserId) {
+                        state.originalUserId = currentUserId;
+                        await saveState();
+                    } else if (state.originalUserId !== currentUserId) {
+                        document.getElementById('multiAccountModal').style.display = 'flex';
+                        return;
+                    }
+                }
+
+                const isNewUser = !(localStorage.getItem('userIdentified'));
+                localStorage.setItem('userIdentified', 'true');
+                
+                await handleReferral();
+                await processReferralRewards();
+                await listenForReferralCount();
+                await listenForVIPStatus();
+                
+                setInterval(checkPendingWithdrawals, 60 * 1000);
+
+                const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
+                if (user?.first_name) {
+                    allDOMElements.greetingEl.textContent = `Welcome, ${escapeHTML(user.first_name)}!`;
+                    if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
+                    else { allDOMElements.profilePicEl.innerHTML = `<span>${escapeHTML(user.first_name.charAt(0))}</span>`; }
+                }
+                
+                updateUI();
+                
+                allDOMElements.watchAdButton.addEventListener('click', watchAd);
+                allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
+                allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
+                allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
+                allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
+                allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
+                window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
+
+                safeTgAction(tg => {
+                    tg.ready(); tg.expand();
+                    tg.onEvent('themeChanged', () => { document.documentElement.setAttribute('data-theme', tg.colorScheme); updateChart(); });
                 });
-                alert('Request sent!');
-                closeModal('vipPurchaseModal');
-            } catch { alert('Failed'); } finally {
-                btn.querySelector('span').style.display = 'inline';
-                btn.querySelector('.spinner').style.display = 'none';
-                btn.disabled = false;
+
+                if (!sessionStorage.getItem('alreadyVisited')) { showModal('welcomeModal'); sessionStorage.setItem('alreadyVisited', 'true'); }
+            } catch (error) { console.error("Initialization failed:", error); } 
+            finally {
+                appReady = true;
+                if (percentage < 100) {
+                    clearInterval(interval);
+                    allDOMElements.preloaderPercentage.textContent = '100%';
+                    preloaderAnimationDone = true;
+                }
+                tryFinishLoading();
             }
-        });
-
-        function copyPaymentNumber() {
-            navigator.clipboard.writeText('01925723245');
-            alert('Copied!');
         }
-
-        // --- INIT ---
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('preloader').style.display = 'none';
-                document.querySelector('.container').style.display = 'block';
-            }, 1000);
-
-            els.userTgId.value = tg.initDataUnsafe.user.id;
-            els.buyVipBtn.addEventListener('click', () => showModal('vipPurchaseModal'));
-            loadVipPackages();
-            updateVIPStatus();
-        });
-
-        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        window.addEventListener('load', initApp);
     </script>
 </body>
 </html>
