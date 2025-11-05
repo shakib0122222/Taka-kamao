@@ -1113,19 +1113,15 @@
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
                     if (new Date() < expiryDate) {
+                        const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
                         state.isVIP = true;
-                        state.vipPackage = {
-                            id: data.packageId,
-                            name: data.name,
-                            dailyAds: data.dailyAds,
-                            validityDays: data.validityDays
-                        };
+                        state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                         state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
-                        const welcomeMsg = `স্বাগতম, ${data.name} VIP! আপনি এখন ${data.validityDays} দিনের জন্য ${data.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${daysLeft} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।`;
                         safeTgAlert(welcomeMsg);
                     } else {
                         // Auto deactivate if expired
@@ -1159,10 +1155,9 @@
                 const pkg = state.vipPackage;
                 const dailyAds = pkg.dailyAds;
                 const rewardPerAd = config.AD_REWARD;
-                const validityDays = pkg.validityDays;
                 const daysLeft = state.vipDaysLeft;
                 const potentialDailyEarning = dailyAds * rewardPerAd;
-                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বৈধতা: ${validityDays} দিন (বাকি ${daysLeft} দিন)\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
             }
             return message;
         }
