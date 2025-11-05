@@ -637,7 +637,7 @@
         function calculateDaysLeft(expiryDate) {
             const diffMs = new Date(expiryDate) - new Date();
             if (diffMs <= 0) return 0;
-            return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+            return Math.floor(diffMs / (1000 * 60 * 60 * 24));
         }
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
@@ -703,7 +703,7 @@
             
             clearInterval(cooldownInterval);
             const watchAdButton = allDOMElements.watchAdButton;
-            if (state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
+            if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
                 watchAdButton.disabled = true;
                 const updateTimer = () => {
                     const remainingMs = new Date(state.cooldownUntil) - new Date();
