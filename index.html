@@ -711,8 +711,9 @@
                 };
                 cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
             } else {
-                watchAdButton.disabled = state.adsWatchedToday >= dailyLimit;
-                watchAdButton.querySelector('span').textContent = state.adsWatchedToday >= dailyLimit ? 'Take a Break' : 'Watch Ad';
+                const limitReached = state.adsWatchedToday >= dailyLimit;
+                watchAdButton.disabled = limitReached;
+                watchAdButton.querySelector('span').textContent = limitReached ? (state.isVIP ? 'VIP Limit Reached' : 'Take a Break') : 'Watch Ad';
             }
             watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
 
@@ -758,7 +759,7 @@
         async function watchAd() {
             const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
             if (state.adsWatchedToday >= dailyLimit) {
-                safeTgAlert('Daily limit reached!');
+                safeTgAlert(state.isVIP ? 'VIP daily limit reached!' : 'Daily limit reached!');
                 return;
             }
             allDOMElements.adLoaderOverlay.style.display = 'flex';
@@ -768,10 +769,12 @@
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
                 let alertMessage = `Ad watched! ${dailyLimit - state.adsWatchedToday} ads left.`;
                 if (state.adsWatchedToday >= dailyLimit) {
-                    const cdDate = new Date();
-                    cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
-                    state.cooldownUntil = cdDate.toISOString();
-                    alertMessage = `Tasks completed! 24-hour break.`;
+                    alertMessage = state.isVIP ? `VIP daily limit reached! Check back tomorrow for more.` : `Tasks completed! 24-hour break.`;
+                    if (!state.isVIP) {
+                        const cdDate = new Date();
+                        cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
+                        state.cooldownUntil = cdDate.toISOString();
+                    }
                 }
                 saveState(); updateUI();
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
@@ -924,11 +927,13 @@
             selectedPackage = null;
 
             if (state.isVIP && state.vipExpiry && new Date() < new Date(state.vipExpiry)) {
+                const expiryDate = new Date(state.vipExpiry);
+                const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                 container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--vip-gold);">
                     <i class="fa-solid fa-crown" style="font-size: 48px; margin-bottom: 20px;"></i>
                     <h3>You are a VIP ${state.vipPackage.name} Member!</h3>
                     <p style="font-size: 16px;">Expires: ${new Date(state.vipExpiry).toLocaleDateString()}</p>
-                    <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${state.vipDaysLeft} days left!</p>
+                    <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${daysLeft} days left!</p>
                 </div>`;
                 return;
             }
@@ -1118,7 +1123,7 @@
                         state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
-                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
                         safeTgAlert(welcomeMsg);
                     } else {
                         // Auto deactivate if expired
@@ -1148,14 +1153,16 @@
 
         function generateWelcomeMessage() {
             let message = config.welcomeNotice.message;
-            if (state.isVIP && state.vipPackage && state.vipDaysLeft > 0) {
-                const pkg = state.vipPackage;
-                const dailyAds = pkg.dailyAds;
-                const rewardPerAd = config.AD_REWARD;
-                const validityDays = pkg.validityDays;
-                const daysLeft = state.vipDaysLeft;
-                const potentialDailyEarning = dailyAds * rewardPerAd;
-                message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বৈধতা: ${validityDays} দিন (বাকি ${daysLeft} দিন)\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+            if (state.isVIP && state.vipPackage && state.vipExpiry) {
+                const expiryDate = new Date(state.vipExpiry);
+                if (new Date() < expiryDate) {
+                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                    const pkg = state.vipPackage;
+                    const dailyAds = pkg.dailyAds;
+                    const rewardPerAd = config.AD_REWARD;
+                    const potentialDailyEarning = dailyAds * rewardPerAd;
+                    message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি: ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+                }
             }
             return message;
         }
@@ -1218,21 +1225,6 @@
                 await processReferralRewards();
                 await listenForReferralCount();
                 await listenForVIPStatus();
-                
-                // Clear old pending VIP requests
-                if (firebaseDb && tg && tg.initDataUnsafe) {
-                    const userId = tg.initDataUnsafe.user.id;
-                    const reqRef = firebaseDb.ref(`vip_requests/${userId}`);
-                    reqRef.once('value').then(snapshot => {
-                        const data = snapshot.val();
-                        if (data && data.status !== 'pending') {
-                            state.vipRequested = false;
-                            state.vipRequestTxId = null;
-                            saveState();
-                            updateUI();
-                        }
-                    }).catch(e => console.error("Error checking old VIP request:", e));
-                }
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
