@@ -987,7 +987,10 @@
                     username: user.username || 'N/A',
                     name: `${user.first_name} ${user.last_name || ''}`,
                     packageId: pkg.id,
+                    name: pkg.name,
                     price: pkg.price,
+                    dailyAds: pkg.dailyAds,
+                    validityDays: pkg.validityDays,
                     txid: txid,
                     timestamp: new Date().toISOString(),
                     status: 'pending'
