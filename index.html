@@ -178,11 +178,11 @@
         }
         .bonus-item:hover { border-color: var(--primary-color); box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.2); }
         .bonus-item .bonus-header { display: flex; align-items: center; gap: 12px; flex: 1; }
-        .bonus-item .icon { font-size: 28px; margin-right: 0; width: 28px; height: 28px; object-fit: contain; }
+        .bonus-item .icon { font-size: 28px; margin-right: 0; width: 35px; height: 35px; object-fit: contain; }
         .bonus-item .details { display: flex; flex-direction: column; gap: 6px; text-align: left; }
-        .bonus-item .title { font-weight: 700; font-size: 16px; color: var(--text-color); margin: 0; }
-        .bonus-item .reward { font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 0; }
-        .bonus-item .reward i { margin-right: 6px; font-size: 16px; }
+        .bonus-item .title { font-weight: 700; font-size: 15px; color: var(--text-color); margin: 0; }
+        .bonus-item .reward { font-size: 17px; font-weight: 800; color: var(--primary-color); margin: 0; }
+        .bonus-item .reward i { margin-right: 6px; font-size: 15px; }
         .bonus-item .claim-button { 
             padding: 12px 24px; 
             font-size: 16px; 
@@ -222,9 +222,9 @@
         #vipModal .modal-content::-webkit-scrollbar-thumb { background: var(--vip-gold); border-radius: 3px; }
         #vipModal .close-button { position: fixed; top: 20px; right: 20px; z-index: 1001; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; }
         #vipModal h3 { color: var(--vip-gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); text-align: center; margin-bottom: 20px; }
-        #vip-packages .vip-package { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--card-background); border-radius: 16px; margin: 15px 0; border: 2px solid var(--border-color); transition: all 0.3s; cursor: pointer; }
+        #vip-packages .vip-package { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--card-background); border-radius: 16px; margin: 15px 0; border: 2px solid var(--border-color); transition: all 0.3s; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         #vip-packages .vip-package:hover { border-color: var(--vip-gold); box-shadow: 0 4px 16px rgba(255,215,0,0.3); }
-        #vip-packages .vip-package.selected { border-color: var(--vip-gold); background: rgba(255,215,0,0.1); }
+        #vip-packages .vip-package.selected { border-color: var(--vip-gold); background: rgba(255,215,0,0.1); box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
         #payment-guide { background: rgba(255,215,0,0.1); border: 2px solid var(--vip-gold); border-radius: 16px; padding: 20px; margin: 20px; text-align: left; }
         #payment-guide p { margin: 10px 0; font-weight: 600; }
         #txid-input { margin: 10px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; }
@@ -1117,7 +1117,8 @@
                         state.vipDaysLeft = daysLeft;
                         saveState();
                         updateUI();
-                        safeTgAlert(`Welcome back, VIP ${pkg.name}! ${daysLeft} days left.`);
+                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! আপনি এখন ${pkg.validityDays} দিনের জন্য ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন। বাকি ${daysLeft} দিন।`;
+                        safeTgAlert(welcomeMsg);
                     } else {
                         // Auto deactivate if expired
                         firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
