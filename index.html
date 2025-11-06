@@ -494,7 +494,7 @@
             <div id="vip-packages"></div>
             <div id="payment-guide" style="display: none;">
                 <h4 style="color: var(--vip-gold);">Payment Instructions</h4>
-                <p>Send payment to: <strong>Bkash/Nagad: 01925723245</strong></p>
+                <p id="payment-instruction">Send <strong>৳<span id="selected-amount">0</span></strong> to: <strong>Bkash/Nagad: 01925723245</strong></p>
                 <button class="action-button secondary-button" onclick="copyPaymentNumber()" style="margin: 10px 0;">
                     <i class="fa-solid fa-copy"></i> Copy Number
                 </button>
@@ -655,6 +655,26 @@
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
         function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
+        // Function to sync user data to Firebase
+        async function syncUserToFirebase(userId, userData) {
+            if (!firebaseDb || !userId) return;
+            try {
+                await firebaseDb.ref(`users/${userId}`).update({
+                    ...userData,
+                    totalEarning: state.totalEarning,
+                    adCount: state.adCount,
+                    referralCount: state.referralCount,
+                    referralBalance: state.referralBalance,
+                    joinDate: state.joinDate || new Date().toISOString(), // Ensure joinDate is set
+                    name: tg ? tg.initDataUnsafe.user.first_name : 'Unknown',
+                    username: tg ? tg.initDataUnsafe.user.username : null,
+                    banned: false // Default not banned
+                });
+            } catch (e) {
+                console.error("Firebase sync error:", e);
+            }
+        }
+
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -688,6 +708,12 @@
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
+
+            // Sync to Firebase after UI update
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (userId) {
+                syncUserToFirebase(userId, { adCount: state.adCount, referralCount: state.referralCount, referralBalance: state.referralBalance });
+            }
 
             // VIP Expiry Check & Countdown
             if (state.isVIP && state.vipExpiry) {
@@ -771,6 +797,31 @@
                 } 
             });
         }
+
+        // Function to create/sync initial user profile
+        async function createUserProfile(userId, user) {
+            if (!firebaseDb || !userId) return;
+            try {
+                const userRef = firebaseDb.ref(`users/${userId}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        name: user.first_name || 'Unknown',
+                        username: user.username || null,
+                        joinDate: new Date().toISOString(),
+                        totalEarning: 0.0,
+                        adCount: 0,
+                        referralCount: 0,
+                        referralBalance: 0.0,
+                        banned: false
+                    });
+                    state.joinDate = new Date().toISOString(); // Set local state
+                    saveState();
+                }
+            } catch (e) {
+                console.error("User profile creation error:", e);
+            }
+        }
         
         async function watchAd() {
             const userId = tg ? tg.initDataUnsafe.user.id : null;
@@ -789,6 +840,9 @@
                 
                 // Sync adCount to Firebase
                 await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
+                
+                // Sync totalEarning
+                await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
                 
                 // Check for referral reward trigger
                 if (previousAdCount === 9 && state.referred_by) {
@@ -899,7 +953,12 @@
             const bonusTasksListEl = allDOMElements.bonusTasksListEl;
             const vipItem = document.createElement('div');
             vipItem.className = 'bonus-item vip-item';
-            const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
+            let statusText = 'Buy Now';
+            if (state.isVIP) {
+                statusText = 'Active';
+            } else if (state.vipRequested) {
+                statusText = 'Pending';
+            }
             vipItem.innerHTML = `
                 <div class="bonus-header">
                     <img src="https://raw.githubusercontent.com/shakib0122222/Taka-kamao/10167fd6277ff23e6fe821b9b9e1e36a8744b35e/vip%20(1).gif" alt="VIP" class="icon">
@@ -942,16 +1001,24 @@
             });
         }
 
-        function handleBonusTask(task, button) {
+        async function handleBonusTask(task, button) {
             safeTgAlert('Please join/subscribe to the group/channel and return to claim the bonus. You will be redirected...');
             button.disabled = true; button.textContent = 'Waiting for Verification...';
             safeTgAction(tg => tg.openLink(task.link));
-            setTimeout(() => {
+            setTimeout(async () => {
                 if (state.completedBonusTasks.includes(task.id)) return;
                 safeTgAlert('Verification complete! Bonus claimed.');
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
-                saveState(); updateUI(); button.textContent = 'Completed ✓';
+                saveState(); updateUI();
+
+                // Sync updated totalEarning to Firebase
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) {
+                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                }
+
+                button.textContent = 'Completed ✓';
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
         }
@@ -984,6 +1051,8 @@
                     <i class="fa-solid fa-clock" style="font-size: 48px; margin-bottom: 20px;"></i>
                     <h3>VIP Request Pending</h3>
                     <p style="font-size: 14px; color: var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</p>
+                    <p style="font-size: 12px; color: var(--text-light);">You can cancel this request and buy a new one if needed.</p>
+                    <button class="action-button secondary-button" onclick="cancelVIPRequest()" style="margin-top: 20px; width: 200px;">Cancel Request</button>
                 </div>`;
                 return;
             }
@@ -997,6 +1066,8 @@
                     document.querySelectorAll('.vip-package').forEach(d => d.classList.remove('selected'));
                     div.classList.add('selected');
                     guide.style.display = 'block';
+                    // Update payment instruction with selected package amount
+                    document.getElementById('selected-amount').textContent = pkg.price;
                     document.getElementById('vip-request-btn').onclick = () => sendVIPRequest(pkg);
                 };
                 div.innerHTML = `
@@ -1010,6 +1081,22 @@
                 `;
                 container.appendChild(div);
             });
+        }
+
+        async function cancelVIPRequest() {
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (!userId || !state.vipRequested) return;
+            try {
+                await firebaseDb.ref(`vip_requests/${userId}`).remove();
+                state.vipRequested = false;
+                state.vipRequestTxId = null;
+                saveState();
+                safeTgAlert('VIP request cancelled. You can now submit a new one.');
+                openVIPModal(); // Reopen to show packages
+            } catch (e) {
+                console.error("Cancel error:", e);
+                safeTgAlert('Failed to cancel. Please contact support.');
+            }
         }
 
         function copyPaymentNumber() {
@@ -1039,10 +1126,16 @@
                     status: 'pending'
                 });
 
+                // Notify admins about the request
+                const message = `<b>👑 New VIP Request 👑</b>\n\n👤 <b>User:</b> ${escapeHTML(user.first_name)} ${escapeHTML(user?.last_name || '')} (@${escapeHTML(user.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user.id}</code>\n📦 <b>Package:</b> ${pkg.name} (৳${pkg.price})\n💳 <b>TxID:</b> <code>${escapeHTML(txid)}</code>\n⏰ <b>Time:</b> ${new Date().toLocaleString()}\n\nApprove in admin panel.`;
+                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
+                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
+                await Promise.all(promises);
+
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
                 saveState();
-                safeTgAlert('VIP Request Sent! Wait for admin approval.');
+                safeTgAlert('VIP Request Sent! Admin will review and approve soon. You can check status in Bonus section.');
                 closeModal('vipModal');
             } catch (e) {
                 safeTgAlert('Failed. Try again.');
@@ -1074,13 +1167,23 @@
             safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
         }
 
-        function addToMainBalance() {
+        async function addToMainBalance() {
             if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
                 const addedAmount = state.referralBalance;
                 state.totalEarning += state.referralBalance;
                 state.referralBalance = 0;
                 saveState();
                 updateUI();
+
+                // Sync updated balances to Firebase
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) {
+                    await firebaseDb.ref(`users/${userId}`).update({
+                        totalEarning: state.totalEarning,
+                        referralBalance: state.referralBalance
+                    });
+                }
+
                 safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } else {
@@ -1131,11 +1234,17 @@
                 state.rewardedQualifiedReferrals = totalQualified;
                 state.referralCount = totalQualified;
                 saveState();
+                updateUI();
+
+                // Sync referral balance
+                await firebaseDb.ref(`users/${userId}/referralBalance`).set(state.referralBalance);
+                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
+
                 safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
             } else {
                 state.referralCount = totalQualified;
+                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
             }
-            updateUI();
         }
 
         async function listenForQualifiedReferrals() {
@@ -1152,7 +1261,42 @@
         async function listenForVIPStatus() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
+
+            // Listen for VIP requests status changes
+            const vipRequestRef = firebaseDb.ref(`vip_requests/${userId}`);
+            vipRequestRef.on('value', async (snapshot) => {
+                const requestData = snapshot.val();
+                if (requestData && requestData.status === 'pending') {
+                    state.vipRequested = true;
+                    state.vipRequestTxId = requestData.txid;
+                    saveState();
+                    updateUI();
+                } else if (requestData && requestData.status === 'approved') {
+                    // Move to vip_users if approved
+                    const pkg = config.VIP_PACKAGES.find(p => p.id === requestData.packageId);
+                    if (pkg) {
+                        const validityDays = pkg.validityDays;
+                        const expiryDate = new Date();
+                        expiryDate.setDate(expiryDate.getDate() + validityDays);
+                        await firebaseDb.ref(`vip_users/${userId}`).set({
+                            active: true,
+                            packageId: pkg.id,
+                            expiry: expiryDate.toISOString(),
+                            startDate: new Date().toISOString()
+                        });
+                        await vipRequestRef.remove(); // Remove the request after approval
+                    }
+                } else if (!requestData) {
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
+                    saveState();
+                    updateUI();
+                }
+            });
+
+            // Listen for active VIP status
+            const vipUserRef = firebaseDb.ref(`vip_users/${userId}`);
+            vipUserRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
@@ -1163,6 +1307,7 @@
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         state.vipDaysLeft = daysLeft;
+                        state.vipRequested = false; // Clear pending if active
                         saveState();
                         updateUI();
                         const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
@@ -1259,6 +1404,10 @@
                         return;
                     }
 
+                    // Create user profile if not exists
+                    const user = tg.initDataUnsafe.user;
+                    await createUserProfile(currentUserId, user);
+
                     // Load referred_by
                     const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
                     const referredSnap = await referredByRef.once('value');
@@ -1269,6 +1418,36 @@
                     const adSnap = await adRef.once('value');
                     if (adSnap.exists()) {
                         state.adCount = adSnap.val();
+                    }
+
+                    // Sync totalEarning from Firebase if exists
+                    const earningRef = firebaseDb.ref(`users/${currentUserId}/totalEarning`);
+                    const earningSnap = await earningRef.once('value');
+                    if (earningSnap.exists()) {
+                        state.totalEarning = earningSnap.val();
+                    }
+
+                    // Sync referralCount
+                    const referralRef = firebaseDb.ref(`users/${currentUserId}/referralCount`);
+                    const referralSnap = await referralRef.once('value');
+                    if (referralSnap.exists()) {
+                        state.referralCount = referralSnap.val();
+                    }
+
+                    // Sync referralBalance
+                    const refBalRef = firebaseDb.ref(`users/${currentUserId}/referralBalance`);
+                    const refBalSnap = await refBalRef.once('value');
+                    if (refBalSnap.exists()) {
+                        state.referralBalance = refBalSnap.val();
+                    }
+
+                    // Check for pending VIP request on load
+                    const vipRequestRef = firebaseDb.ref(`vip_requests/${currentUserId}`);
+                    const vipRequestSnap = await vipRequestRef.once('value');
+                    const requestData = vipRequestSnap.val();
+                    if (requestData && requestData.status === 'pending') {
+                        state.vipRequested = true;
+                        state.vipRequestTxId = requestData.txid;
                     }
                 }
 
