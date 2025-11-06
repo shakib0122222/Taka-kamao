@@ -635,9 +635,15 @@
         };
         
         function calculateDaysLeft(expiryDate) {
-            const diffMs = new Date(expiryDate) - new Date();
-            if (diffMs <= 0) return 0;
-            return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            // Fixed calculation to avoid timezone/DST issues by normalizing to midnight UTC
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0);
+            const exp = new Date(expiryDate);
+            exp.setUTCHours(0, 0, 0, 0);
+            const diffTime = exp.getTime() - today.getTime();
+            if (diffTime <= 0) return 0;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
         }
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
