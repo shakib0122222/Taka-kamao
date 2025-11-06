@@ -730,7 +730,7 @@
                     state.vipDaysLeft = daysLeft;
                     const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
                     if (vipStatusEl) {
-                        vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${daysLeft} days left)`;
+                        vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> ${state.vipPackage.name} (${daysLeft} days left)`;
                     }
                 }
             }
