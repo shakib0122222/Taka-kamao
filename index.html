@@ -1243,6 +1243,8 @@
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         state.vipDaysLeft = daysLeft;
+                        state.vipRequested = false; // Reset pending when activated
+                        state.vipRequestTxId = null;
                         saveState();
                         updateUI();
                         const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
@@ -1250,16 +1252,44 @@
                     } else {
                         // Auto deactivate if expired
                         firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
+                        state.isVIP = false;
+                        state.vipPackage = null;
+                        state.vipExpiry = null;
+                        state.vipDaysLeft = 0;
+                        saveState();
+                        updateUI();
                     }
                 } else {
                     state.isVIP = false;
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
+                    saveState();
+                    updateUI();
+                }
+            });
+        }
+
+        // NEW: Listener for VIP Request Pending Status
+        async function listenForVIPRequestStatus() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            firebaseDb.ref(`vip_requests/${userId}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.status === 'pending') {
+                    state.vipRequested = true;
+                    state.vipRequestTxId = data.txid;
+                    saveState();
+                    updateUI(); // This will trigger re-render if bonus modal is open
+                } else if (data && data.status === 'approved') {
+                    // Handled by VIP status listener
                     state.vipRequested = false;
                     state.vipRequestTxId = null;
                     saveState();
-                    updateUI();
+                } else {
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
+                    saveState();
                 }
             });
         }
@@ -1305,9 +1335,10 @@
                 }
             };
 
+            // FASTER PRELOADER: Shorter interval and faster progression
             let percentage = 0;
             const interval = setInterval(() => {
-                percentage += Math.floor(Math.random() * 5) + 1;
+                percentage += Math.floor(Math.random() * 8) + 3; // Faster increment
                 if (percentage > 100) percentage = 100;
                 allDOMElements.preloaderPercentage.textContent = `${percentage}%`;
                 if (percentage >= 100) {
@@ -1315,19 +1346,21 @@
                     preloaderAnimationDone = true;
                     tryFinishLoading();
                 }
-            }, 60);
+            }, 30); // Shorter interval: 30ms instead of 60ms
+
+            // EARLY LOADS: Load Monetag and populate methods immediately (non-blocking)
+            loadMonetagSDK(); 
+            populateWithdrawalMethods();
 
             try {
-                loadMonetagSDK(); 
+                // FASTER INIT: Parallelize non-dependent tasks
                 initFirebase();
-               
-                populateWithdrawalMethods();
 
                 allDOMElements.welcomeTitle.textContent = config.welcomeNotice.title;
                 allDOMElements.welcomeMessage.textContent = generateWelcomeMessage();
 
-                await initDB(); 
-                await loadState();
+                // Parallel: DB init and Firebase setup
+                await Promise.all([initDB(), loadState()]);
 
                 const currentUserId = tg ? tg.initDataUnsafe?.user?.id : null;
                 if (currentUserId) {
@@ -1339,51 +1372,40 @@
                         return;
                     }
 
-                    // Create user profile if not exists
+                    // Create user profile if not exists (non-blocking parallel)
                     const user = tg.initDataUnsafe.user;
-                    await createUserProfile(currentUserId, user);
+                    createUserProfile(currentUserId, user); // Fire and forget if possible
 
-                    // Load referred_by
-                    const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
-                    const referredSnap = await referredByRef.once('value');
+                    // Parallel Firebase snaps
+                    const [
+                        referredSnap,
+                        adSnap,
+                        earningSnap,
+                        referralSnap,
+                        refBalSnap
+                    ] = await Promise.all([
+                        firebaseDb.ref(`users/${currentUserId}/referred_by`).once('value'),
+                        firebaseDb.ref(`users/${currentUserId}/adCount`).once('value'),
+                        firebaseDb.ref(`users/${currentUserId}/totalEarning`).once('value'),
+                        firebaseDb.ref(`users/${currentUserId}/referralCount`).once('value'),
+                        firebaseDb.ref(`users/${currentUserId}/referralBalance`).once('value')
+                    ]);
+
                     state.referred_by = referredSnap.val() || null;
-
-                    // Sync adCount from Firebase
-                    const adRef = firebaseDb.ref(`users/${currentUserId}/adCount`);
-                    const adSnap = await adRef.once('value');
-                    if (adSnap.exists()) {
-                        state.adCount = adSnap.val();
-                    }
-
-                    // Sync totalEarning from Firebase if exists
-                    const earningRef = firebaseDb.ref(`users/${currentUserId}/totalEarning`);
-                    const earningSnap = await earningRef.once('value');
-                    if (earningSnap.exists()) {
-                        state.totalEarning = earningSnap.val();
-                    }
-
-                    // Sync referralCount
-                    const referralRef = firebaseDb.ref(`users/${currentUserId}/referralCount`);
-                    const referralSnap = await referralRef.once('value');
-                    if (referralSnap.exists()) {
-                        state.referralCount = referralSnap.val();
-                    }
-
-                    // Sync referralBalance
-                    const refBalRef = firebaseDb.ref(`users/${currentUserId}/referralBalance`);
-                    const refBalSnap = await refBalRef.once('value');
-                    if (refBalSnap.exists()) {
-                        state.referralBalance = refBalSnap.val();
-                    }
+                    if (adSnap.exists()) state.adCount = adSnap.val();
+                    if (earningSnap.exists()) state.totalEarning = earningSnap.val();
+                    if (referralSnap.exists()) state.referralCount = referralSnap.val();
+                    if (refBalSnap.exists()) state.referralBalance = refBalSnap.val();
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
                 localStorage.setItem('userIdentified', 'true');
                 
-                await handleReferral();
-                await processQualifiedRewards();
-                await listenForQualifiedReferrals();
-                await listenForVIPStatus();
+                // Parallel non-dependent tasks
+                await Promise.all([handleReferral(), processQualifiedRewards()]);
+                listenForQualifiedReferrals();
+                listenForVIPStatus();
+                listenForVIPRequestStatus(); // NEW: Added listener for pending status
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
