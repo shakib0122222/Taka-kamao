@@ -421,6 +421,37 @@
             color: var(--text-color);
             font-size: 14px;
         }
+
+        /* Join Channel Modal Special Style */
+        #joinChannelModal .modal-content {
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 24px;
+            max-width: 380px;
+            background: linear-gradient(135deg, var(--tomato-gradient), var(--card-background));
+        }
+        #joinChannelModal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--primary-color);
+        }
+        #joinChannelModal p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 16px 0;
+            color: var(--text-color);
+        }
+        #joinChannelModal .action-button {
+            background: var(--tomato-gradient) !important;
+            font-weight: 700;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+        }
+        #joinChannelModal .action-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -463,6 +494,17 @@
             <h3 id="welcome-title" class="card-title"></h3>
             <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
             <button class="action-button" onclick="closeModal('welcomeModal')">আমি বুঝেছি</button>
+        </div>
+    </div>
+
+    <!-- Join Channel Modal -->
+    <div id="joinChannelModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('joinChannelModal')">&times;</span>
+            <h3>গ্রুপে জয়েন করুন</h3>
+            <p style="line-height: 1.7; font-size: 15px;">অ্যাড দেখার জন্য আমাদের গ্রুপে জয়েন করুন। জয়েন করলে আপনি অ্যাড দেখতে পারবেন এবং আয় করতে পারবেন! 🍅</p>
+            <button class="action-button" id="join-channel-popup"><i class="fa-brands fa-telegram"></i> জয়েন করুন</button>
+            <p style="font-size: 12px; color: var(--text-light); margin-top: 15px;">জয়েন করার পর ফিরে এসে অ্যাড দেখুন।</p>
         </div>
     </div>
     
@@ -626,6 +668,7 @@
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
         let selectedPackage = null;
+        let joinTimeout;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
@@ -635,7 +678,8 @@
             greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
-            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance'),
+            joinChannelPopup: document.getElementById('join-channel-popup')
         };
         
         function calculateDaysLeft(expiryDate) {
@@ -713,11 +757,7 @@
             
             clearInterval(cooldownInterval);
             const watchAdButton = allDOMElements.watchAdButton;
-            if (!state.hasJoinedChannel) {
-                watchAdButton.disabled = true;
-                watchAdButton.querySelector('span').textContent = 'Join Channel First';
-                watchAdButton.classList.remove('pulsing');
-            } else if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
+            if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
                 watchAdButton.disabled = true;
                 const updateTimer = () => {
                     const remainingMs = new Date(state.cooldownUntil) - new Date();
@@ -730,13 +770,12 @@
                     }
                 };
                 cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
-                watchAdButton.classList.remove('pulsing');
             } else {
                 const limitReached = state.adsWatchedToday >= dailyLimit;
                 watchAdButton.disabled = limitReached;
                 watchAdButton.querySelector('span').textContent = limitReached ? (state.isVIP ? 'VIP Limit Reached' : 'Take a Break') : 'Watch Ad';
-                watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
             }
+            watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
 
             // No VIP King Badge
 
@@ -778,10 +817,10 @@
         
         async function watchAd() {
             if (!state.hasJoinedChannel) {
-                safeTgAlert('Please join our channel first to start earning!');
-                safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
+                showModal('joinChannelModal');
                 return;
             }
+
             const userId = tg ? tg.initDataUnsafe.user.id : null;
             if (!userId) return;
             const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
@@ -1286,11 +1325,6 @@
                 const isNewUser = !(localStorage.getItem('userIdentified'));
                 localStorage.setItem('userIdentified', 'true');
                 
-                if (isNewUser) {
-                    state.totalEarning += 50; // Join bonus
-                    saveState();
-                }
-                
                 await handleReferral();
                 await processQualifiedRewards();
                 await listenForQualifiedReferrals();
@@ -1313,22 +1347,28 @@
                 
                 allDOMElements.watchAdButton.addEventListener('click', watchAd);
                 allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
-                allDOMElements.joinChannelButton.addEventListener('click', () => {
-                    safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
-                    safeTgAlert('Please join the channel and return to start earning.');
-                    setTimeout(() => {
-                        if (!state.hasJoinedChannel) {
-                            state.hasJoinedChannel = true;
-                            saveState();
-                            updateUI();
-                            safeTgAlert('Channel joined! You can now watch ads.');
-                            safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
-                        }
-                    }, 10000);
-                });
+                allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
                 allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
                 allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
                 allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
+
+                // Join Channel Popup Button Event
+                allDOMElements.joinChannelPopup.addEventListener('click', () => {
+                    safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
+                    const button = allDOMElements.joinChannelPopup;
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> জয়েন করছি...';
+                    clearTimeout(joinTimeout);
+                    joinTimeout = setTimeout(() => {
+                        state.hasJoinedChannel = true;
+                        saveState();
+                        closeModal('joinChannelModal');
+                        safeTgAlert('স্বাগতম গ্রুপে! এখন অ্যাড দেখুন এবং আয় করুন। 🍅');
+                        safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                        watchAd(); // Auto trigger ad watch after join
+                    }, 10000); // 10 seconds timeout for verification
+                });
+
                 window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
 
                 safeTgAction(tg => {
