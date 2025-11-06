@@ -580,7 +580,7 @@
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
             MINIMUM_WITHDRAWAL: 500,
-            MIN_REFERRALS_FOR_WITHDRAW: 15,
+            MIN_REFERRALS_FOR_WITHDRAW: 10,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
             MIN_AD_EARNING_FOR_WITHDRAW: 500,
@@ -724,6 +724,8 @@
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
                     saveState();
                     safeTgAlert('Your VIP membership has expired. Upgrade again to continue enjoying benefits!');
                 } else {
@@ -953,12 +955,7 @@
             const bonusTasksListEl = allDOMElements.bonusTasksListEl;
             const vipItem = document.createElement('div');
             vipItem.className = 'bonus-item vip-item';
-            let statusText = 'Buy Now';
-            if (state.isVIP) {
-                statusText = 'Active';
-            } else if (state.vipRequested) {
-                statusText = 'Pending';
-            }
+            const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
             vipItem.innerHTML = `
                 <div class="bonus-header">
                     <img src="https://raw.githubusercontent.com/shakib0122222/Taka-kamao/10167fd6277ff23e6fe821b9b9e1e36a8744b35e/vip%20(1).gif" alt="VIP" class="icon">
@@ -967,7 +964,7 @@
                         <p class="reward"><i class="fa-solid fa-crown"></i> Unlock More Ads & Earnings!</p>
                     </div>
                 </div>
-                <button class="claim-button" onclick="openVIPModal()" ${state.isVIP ? 'disabled' : ''}>
+                <button class="claim-button" onclick="openVIPModal()" ${state.isVIP || state.vipRequested ? 'disabled' : ''}>
                     ${statusText}
                 </button>
             `;
@@ -1051,8 +1048,6 @@
                     <i class="fa-solid fa-clock" style="font-size: 48px; margin-bottom: 20px;"></i>
                     <h3>VIP Request Pending</h3>
                     <p style="font-size: 14px; color: var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</p>
-                    <p style="font-size: 12px; color: var(--text-light);">You can cancel this request and buy a new one if needed.</p>
-                    <button class="action-button secondary-button" onclick="cancelVIPRequest()" style="margin-top: 20px; width: 200px;">Cancel Request</button>
                 </div>`;
                 return;
             }
@@ -1083,22 +1078,6 @@
             });
         }
 
-        async function cancelVIPRequest() {
-            const userId = tg ? tg.initDataUnsafe.user.id : null;
-            if (!userId || !state.vipRequested) return;
-            try {
-                await firebaseDb.ref(`vip_requests/${userId}`).remove();
-                state.vipRequested = false;
-                state.vipRequestTxId = null;
-                saveState();
-                safeTgAlert('VIP request cancelled. You can now submit a new one.');
-                openVIPModal(); // Reopen to show packages
-            } catch (e) {
-                console.error("Cancel error:", e);
-                safeTgAlert('Failed to cancel. Please contact support.');
-            }
-        }
-
         function copyPaymentNumber() {
             navigator.clipboard.writeText(config.PAYMENT_NUMBER).then(() => safeTgAlert('Number copied!'));
         }
@@ -1126,16 +1105,10 @@
                     status: 'pending'
                 });
 
-                // Notify admins about the request
-                const message = `<b>👑 New VIP Request 👑</b>\n\n👤 <b>User:</b> ${escapeHTML(user.first_name)} ${escapeHTML(user?.last_name || '')} (@${escapeHTML(user.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user.id}</code>\n📦 <b>Package:</b> ${pkg.name} (৳${pkg.price})\n💳 <b>TxID:</b> <code>${escapeHTML(txid)}</code>\n⏰ <b>Time:</b> ${new Date().toLocaleString()}\n\nApprove in admin panel.`;
-                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
-                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
-                await Promise.all(promises);
-
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
                 saveState();
-                safeTgAlert('VIP Request Sent! Admin will review and approve soon. You can check status in Bonus section.');
+                safeTgAlert('VIP Request Sent! Wait for admin approval.');
                 closeModal('vipModal');
             } catch (e) {
                 safeTgAlert('Failed. Try again.');
@@ -1261,42 +1234,7 @@
         async function listenForVIPStatus() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-
-            // Listen for VIP requests status changes
-            const vipRequestRef = firebaseDb.ref(`vip_requests/${userId}`);
-            vipRequestRef.on('value', async (snapshot) => {
-                const requestData = snapshot.val();
-                if (requestData && requestData.status === 'pending') {
-                    state.vipRequested = true;
-                    state.vipRequestTxId = requestData.txid;
-                    saveState();
-                    updateUI();
-                } else if (requestData && requestData.status === 'approved') {
-                    // Move to vip_users if approved
-                    const pkg = config.VIP_PACKAGES.find(p => p.id === requestData.packageId);
-                    if (pkg) {
-                        const validityDays = pkg.validityDays;
-                        const expiryDate = new Date();
-                        expiryDate.setDate(expiryDate.getDate() + validityDays);
-                        await firebaseDb.ref(`vip_users/${userId}`).set({
-                            active: true,
-                            packageId: pkg.id,
-                            expiry: expiryDate.toISOString(),
-                            startDate: new Date().toISOString()
-                        });
-                        await vipRequestRef.remove(); // Remove the request after approval
-                    }
-                } else if (!requestData) {
-                    state.vipRequested = false;
-                    state.vipRequestTxId = null;
-                    saveState();
-                    updateUI();
-                }
-            });
-
-            // Listen for active VIP status
-            const vipUserRef = firebaseDb.ref(`vip_users/${userId}`);
-            vipUserRef.on('value', (snapshot) => {
+            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
@@ -1307,7 +1245,8 @@
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         state.vipDaysLeft = daysLeft;
-                        state.vipRequested = false; // Clear pending if active
+                        state.vipRequested = false;
+                        state.vipRequestTxId = null;
                         saveState();
                         updateUI();
                         const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
@@ -1439,15 +1378,6 @@
                     const refBalSnap = await refBalRef.once('value');
                     if (refBalSnap.exists()) {
                         state.referralBalance = refBalSnap.val();
-                    }
-
-                    // Check for pending VIP request on load
-                    const vipRequestRef = firebaseDb.ref(`vip_requests/${currentUserId}`);
-                    const vipRequestSnap = await vipRequestRef.once('value');
-                    const requestData = vipRequestSnap.val();
-                    if (requestData && requestData.status === 'pending') {
-                        state.vipRequested = true;
-                        state.vipRequestTxId = requestData.txid;
                     }
                 }
 
