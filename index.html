@@ -422,13 +422,15 @@
             font-size: 14px;
         }
 
-        /* Join Channel Modal Special Style */
+        /* Join Channel Modal Special Style - Simplified White Background */
         #joinChannelModal .modal-content {
             padding: 30px 20px;
             text-align: center;
             border-radius: 24px;
             max-width: 380px;
-            background: linear-gradient(135deg, var(--tomato-gradient), var(--card-background));
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         #joinChannelModal h3 {
             font-size: 22px;
@@ -441,6 +443,7 @@
             line-height: 1.7;
             margin: 16px 0;
             color: var(--text-color);
+            font-weight: 500;
         }
         #joinChannelModal .action-button {
             background: var(--tomato-gradient) !important;
@@ -451,6 +454,12 @@
         #joinChannelModal .action-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
+        #joinChannelModal .note-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 15px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -497,14 +506,14 @@
         </div>
     </div>
 
-    <!-- Join Channel Modal -->
+    <!-- Join Channel Modal - Simplified White Background -->
     <div id="joinChannelModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('joinChannelModal')">&times;</span>
             <h3>গ্রুপে জয়েন করুন</h3>
             <p style="line-height: 1.7; font-size: 15px;">অ্যাড দেখার জন্য আমাদের গ্রুপে জয়েন করুন। জয়েন করলে আপনি অ্যাড দেখতে পারবেন এবং আয় করতে পারবেন! 🍅</p>
             <button class="action-button" id="join-channel-popup"><i class="fa-brands fa-telegram"></i> জয়েন করুন</button>
-            <p style="font-size: 12px; color: var(--text-light); margin-top: 15px;">জয়েন করার পর ফিরে এসে অ্যাড দেখুন।</p>
+            <p class="note-text">জয়েন করার পর ফিরে এসে অ্যাড দেখুন।</p>
         </div>
     </div>
     
@@ -622,7 +631,7 @@
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
             MINIMUM_WITHDRAWAL: 500,
-            MIN_REFERRALS_FOR_WITHDRAW: 10,
+            MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
             MIN_AD_EARNING_FOR_WITHDRAW: 500,
@@ -1161,7 +1170,11 @@
             const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
             await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
 
-            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus if they watch 10 ads.`;
+            // Fixed message to handle undefined username
+            let message = `🎉 Congratulations! User ${escapeHTML(currentUser.first_name || 'User')} joined using your link. You will receive your bonus if they watch 10 ads.`;
+            if (currentUser.username) {
+                message += ` (@${escapeHTML(currentUser.username)})`;
+            }
             await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
         }
 
