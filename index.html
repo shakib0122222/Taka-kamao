@@ -124,6 +124,10 @@
             align-items: stretch;
             padding: 0;
             justify-content: stretch;
+            z-index: 1000;
+        }
+        #vipModal {
+            z-index: 1001;
         }
         #bonusTasksModal .modal-content { 
             width: 100%; 
@@ -759,8 +763,7 @@
                 options: { 
                     scales: { 
                         y: { beginAtZero: true, ticks: { stepSize: 5, color: fontColor }, grid: { color: gridColor } }, 
-                        x: { ticks: { color: fontColor }, grid: { color: gridColor } } 
-                    }, 
+                        x: { ticks: { color: fontColor }, grid: { color: gridColor } } } , 
                     plugins: { legend: { display: false } }, 
                     responsive: true, 
                     maintainAspectRatio: false 
