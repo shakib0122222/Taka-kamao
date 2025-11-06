@@ -540,7 +540,7 @@
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('inviteModal')">&times;</span>
             <h3 class="card-title">Invite Friends</h3>
-            <p>Share your referral link with your friends and earn together. You will get a reward for each successful referral.</p>
+            <p>Share your referral link with your friends. Earn ৳50 for each friend who watches 10 ads!</p>
             <div class="referral-card">
                 <h4>Referral Balance</h4>
                 <div class="balance-amount" id="referral-balance-text">৳0.00</div>
@@ -597,6 +597,7 @@
                 measurementId: "G-V0QDHQ27L3"
             },
             REFERRAL_REWARD: 50,
+            QUALIFIED_ADS_REQUIRED: 10,
             VIP_PACKAGES: [
                 { id: 'vip_50', name: 'VIP Starter', price: 50, dailyAds: 15, validityDays: 5 },
                 { id: 'vip_100', name: 'VIP Basic', price: 100, dailyAds: 25, validityDays: 7 },
@@ -614,14 +615,14 @@
             ],
             welcomeNotice: {
                 title: "Welcome!",
-                message: "Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৫ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
+                message: "Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৫ টাকা\nপ্রতি যোগ্য রেফারে (১০টি অ্যাড দেখলে) ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
             }
         };
 
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedReferrals: 0, originalUserId: null, referralCount: 0, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
@@ -652,7 +653,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedReferrals) state.rewardedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -683,7 +684,7 @@
             allDOMElements.referralCountEl.textContent = state.referralCount;
             allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
             allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
-            allDOMElements.referralRequirementNote.innerHTML = `<strong>নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
+            allDOMElements.referralRequirementNote.innerHTML = `<strong>নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} qualified referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
@@ -772,16 +773,39 @@
         }
         
         async function watchAd() {
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (!userId) return;
             const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
             if (state.adsWatchedToday >= dailyLimit) {
                 safeTgAlert(state.isVIP ? 'VIP daily limit reached!' : 'Daily limit reached!');
                 return;
             }
             allDOMElements.adLoaderOverlay.style.display = 'flex';
+            const previousAdCount = state.adCount;
             const adFunction = window[`show_${config.MONETAG_ZONE_ID}`];
             if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
-            adFunction().then(() => {
+            adFunction().then(async () => {
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
+                
+                // Sync adCount to Firebase
+                await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
+                
+                // Check for referral reward trigger
+                if (previousAdCount === 9 && state.referred_by) {
+                    const referrerId = state.referred_by;
+                    const referrerQualifiedRef = firebaseDb.ref(`users/${referrerId}/qualifiedReferrals`);
+                    await referrerQualifiedRef.transaction(curr => (curr || 0) + 1);
+                    
+                    // Notify referrer
+                    const user = tg.initDataUnsafe.user;
+                    const message = `🎉 Great news! Your referral ${escapeHTML(user.first_name || 'User')} has completed 10 ads. You've earned ৳50! Check your app.`;
+                    await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: referrerId, text: message })
+                    }).catch(console.error);
+                }
+                
                 let alertMessage = `Ad watched! ${dailyLimit - state.adsWatchedToday} ads left.`;
                 if (state.adsWatchedToday >= dailyLimit) {
                     alertMessage = state.isVIP ? `VIP daily limit reached! Check back tomorrow for more.` : `Tasks completed! 24-hour break.`;
@@ -801,7 +825,7 @@
         async function handleWithdrawal(event) {
             event.preventDefault();
             if (state.referralCount < config.MIN_REFERRALS_FOR_WITHDRAW) {
-                safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} referrals to withdraw. Current: ${state.referralCount}`);
+                safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} qualified referrals to withdraw. Current: ${state.referralCount}`);
                 return;
             }
             const { withdrawForm } = allDOMElements;
@@ -1087,40 +1111,41 @@
             const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
             await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
 
-            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus next time you open the app.`;
+            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus if they watch 10 ads.`;
             await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
         }
 
-        async function processReferralRewards() {
+        async function processQualifiedRewards() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            const referralsRef = firebaseDb.ref(`users/${userId}/referrals`);
-            const snapshot = await referralsRef.once('value');
-            const totalReferrals = snapshot.val() || 0;
+            const qualifiedReferralsRef = firebaseDb.ref(`users/${userId}/qualifiedReferrals`);
+            const snapshot = await qualifiedReferralsRef.once('value');
+            const totalQualified = snapshot.val() || 0;
 
-            const rewardedReferrals = state.rewardedReferrals || 0;
-            const newReferrals = totalReferrals - rewardedReferrals;
+            const rewarded = state.rewardedQualifiedReferrals || 0;
+            const newQualified = totalQualified - rewarded;
 
-            if (newReferrals > 0) {
-                const bonus = newReferrals * config.REFERRAL_REWARD;
+            if (newQualified > 0) {
+                const bonus = newQualified * config.REFERRAL_REWARD;
                 state.referralBalance += bonus;
-                state.rewardedReferrals = totalReferrals;
-                state.referralCount = totalReferrals;
+                state.rewardedQualifiedReferrals = totalQualified;
+                state.referralCount = totalQualified;
                 saveState();
-                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newReferrals} new referral(s)! It has been added to your Referral Balance.`);
+                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
             } else {
-                state.referralCount = totalReferrals;
+                state.referralCount = totalQualified;
             }
+            updateUI();
         }
 
-        async function listenForReferralCount() {
+        async function listenForQualifiedReferrals() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            const referralsRef = firebaseDb.ref(`users/${userId}/referrals`);
-            referralsRef.on('value', (snapshot) => { 
+            const qualifiedReferralsRef = firebaseDb.ref(`users/${userId}/qualifiedReferrals`);
+            qualifiedReferralsRef.on('value', async (snapshot) => { 
                 const count = snapshot.val() || 0;
                 state.referralCount = count;
-                updateUI();
+                await processQualifiedRewards();
             });
         }
 
@@ -1178,7 +1203,7 @@
                     const dailyAds = pkg.dailyAds;
                     const rewardPerAd = config.AD_REWARD;
                     const potentialDailyEarning = dailyAds * rewardPerAd;
-                    message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি: ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি রেফারে ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+                    message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি: ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি যোগ্য রেফারে (১০টি অ্যাড দেখলে) ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
                 }
             }
             return message;
@@ -1233,14 +1258,26 @@
                         document.getElementById('multiAccountModal').style.display = 'flex';
                         return;
                     }
+
+                    // Load referred_by
+                    const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
+                    const referredSnap = await referredByRef.once('value');
+                    state.referred_by = referredSnap.val() || null;
+
+                    // Sync adCount from Firebase
+                    const adRef = firebaseDb.ref(`users/${currentUserId}/adCount`);
+                    const adSnap = await adRef.once('value');
+                    if (adSnap.exists()) {
+                        state.adCount = adSnap.val();
+                    }
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
                 localStorage.setItem('userIdentified', 'true');
                 
                 await handleReferral();
-                await processReferralRewards();
-                await listenForReferralCount();
+                await processQualifiedRewards();
+                await listenForQualifiedReferrals();
                 await listenForVIPStatus();
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
@@ -1281,6 +1318,7 @@
                     preloaderAnimationDone = true;
                 }
                 tryFinishLoading();
+                saveState();
             }
         }
         
