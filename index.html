@@ -580,7 +580,7 @@
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
             MINIMUM_WITHDRAWAL: 500,
-            MIN_REFERRALS_FOR_WITHDRAW: 10,
+            MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
             MIN_AD_EARNING_FOR_WITHDRAW: 500,
@@ -606,7 +606,6 @@
                 { id: 'vip_1000', name: 'VIP Platinum', price: 1000, dailyAds: 100, validityDays: 90 }
             ],
             bonusTasks: [
-                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
                 { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
                 { id: 'bonus_03', title: 'YouTube চ্যানেল Subscribe করুন', link: 'https://youtube.com/@experthoiacademy?si=JzntArQaysuDys7R', reward: 10, duration: 30, icon: 'fa-brands fa-youtube' },
                 { id: 'bonus_04', title: 'Facebook Page Follow করুন', link: 'https://www.facebook.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-facebook' },
@@ -622,7 +621,7 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0, hasJoinedChannel: false };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
@@ -653,27 +652,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
-
-        // Function to sync user data to Firebase
-        async function syncUserToFirebase(userId, userData) {
-            if (!firebaseDb || !userId) return;
-            try {
-                await firebaseDb.ref(`users/${userId}`).update({
-                    ...userData,
-                    totalEarning: state.totalEarning,
-                    adCount: state.adCount,
-                    referralCount: state.referralCount,
-                    referralBalance: state.referralBalance,
-                    joinDate: state.joinDate || new Date().toISOString(), // Ensure joinDate is set
-                    name: tg ? tg.initDataUnsafe.user.first_name : 'Unknown',
-                    username: tg ? tg.initDataUnsafe.user.username : null,
-                    banned: false // Default not banned
-                });
-            } catch (e) {
-                console.error("Firebase sync error:", e);
-            }
-        }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.hasJoinedChannel) state.hasJoinedChannel = false; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -709,12 +688,6 @@
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
 
-            // Sync to Firebase after UI update
-            const userId = tg ? tg.initDataUnsafe.user.id : null;
-            if (userId) {
-                syncUserToFirebase(userId, { adCount: state.adCount, referralCount: state.referralCount, referralBalance: state.referralBalance });
-            }
-
             // VIP Expiry Check & Countdown
             if (state.isVIP && state.vipExpiry) {
                 const expiryDate = new Date(state.vipExpiry);
@@ -740,7 +713,11 @@
             
             clearInterval(cooldownInterval);
             const watchAdButton = allDOMElements.watchAdButton;
-            if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
+            if (!state.hasJoinedChannel) {
+                watchAdButton.disabled = true;
+                watchAdButton.querySelector('span').textContent = 'Join Channel First';
+                watchAdButton.classList.remove('pulsing');
+            } else if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
                 watchAdButton.disabled = true;
                 const updateTimer = () => {
                     const remainingMs = new Date(state.cooldownUntil) - new Date();
@@ -753,12 +730,13 @@
                     }
                 };
                 cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
+                watchAdButton.classList.remove('pulsing');
             } else {
                 const limitReached = state.adsWatchedToday >= dailyLimit;
                 watchAdButton.disabled = limitReached;
                 watchAdButton.querySelector('span').textContent = limitReached ? (state.isVIP ? 'VIP Limit Reached' : 'Take a Break') : 'Watch Ad';
+                watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
             }
-            watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
 
             // No VIP King Badge
 
@@ -797,33 +775,13 @@
                 } 
             });
         }
-
-        // Function to create/sync initial user profile
-        async function createUserProfile(userId, user) {
-            if (!firebaseDb || !userId) return;
-            try {
-                const userRef = firebaseDb.ref(`users/${userId}`);
-                const snapshot = await userRef.once('value');
-                if (!snapshot.exists()) {
-                    await userRef.set({
-                        name: user.first_name || 'Unknown',
-                        username: user.username || null,
-                        joinDate: new Date().toISOString(),
-                        totalEarning: 0.0,
-                        adCount: 0,
-                        referralCount: 0,
-                        referralBalance: 0.0,
-                        banned: false
-                    });
-                    state.joinDate = new Date().toISOString(); // Set local state
-                    saveState();
-                }
-            } catch (e) {
-                console.error("User profile creation error:", e);
-            }
-        }
         
         async function watchAd() {
+            if (!state.hasJoinedChannel) {
+                safeTgAlert('Please join our channel first to start earning!');
+                safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
+                return;
+            }
             const userId = tg ? tg.initDataUnsafe.user.id : null;
             if (!userId) return;
             const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
@@ -840,9 +798,6 @@
                 
                 // Sync adCount to Firebase
                 await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
-                
-                // Sync totalEarning
-                await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
                 
                 // Check for referral reward trigger
                 if (previousAdCount === 9 && state.referred_by) {
@@ -996,24 +951,16 @@
             });
         }
 
-        async function handleBonusTask(task, button) {
+        function handleBonusTask(task, button) {
             safeTgAlert('Please join/subscribe to the group/channel and return to claim the bonus. You will be redirected...');
             button.disabled = true; button.textContent = 'Waiting for Verification...';
             safeTgAction(tg => tg.openLink(task.link));
-            setTimeout(async () => {
+            setTimeout(() => {
                 if (state.completedBonusTasks.includes(task.id)) return;
                 safeTgAlert('Verification complete! Bonus claimed.');
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
-                saveState(); updateUI();
-
-                // Sync updated totalEarning to Firebase
-                const userId = tg ? tg.initDataUnsafe.user.id : null;
-                if (userId) {
-                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
-                }
-
-                button.textContent = 'Completed ✓';
+                saveState(); updateUI(); button.textContent = 'Completed ✓';
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
         }
@@ -1138,23 +1085,13 @@
             safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
         }
 
-        async function addToMainBalance() {
+        function addToMainBalance() {
             if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
                 const addedAmount = state.referralBalance;
                 state.totalEarning += state.referralBalance;
                 state.referralBalance = 0;
                 saveState();
                 updateUI();
-
-                // Sync updated balances to Firebase
-                const userId = tg ? tg.initDataUnsafe.user.id : null;
-                if (userId) {
-                    await firebaseDb.ref(`users/${userId}`).update({
-                        totalEarning: state.totalEarning,
-                        referralBalance: state.referralBalance
-                    });
-                }
-
                 safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } else {
@@ -1205,17 +1142,11 @@
                 state.rewardedQualifiedReferrals = totalQualified;
                 state.referralCount = totalQualified;
                 saveState();
-                updateUI();
-
-                // Sync referral balance
-                await firebaseDb.ref(`users/${userId}/referralBalance`).set(state.referralBalance);
-                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
-
                 safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
             } else {
                 state.referralCount = totalQualified;
-                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
             }
+            updateUI();
         }
 
         async function listenForQualifiedReferrals() {
@@ -1339,10 +1270,6 @@
                         return;
                     }
 
-                    // Create user profile if not exists
-                    const user = tg.initDataUnsafe.user;
-                    await createUserProfile(currentUserId, user);
-
                     // Load referred_by
                     const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
                     const referredSnap = await referredByRef.once('value');
@@ -1354,31 +1281,15 @@
                     if (adSnap.exists()) {
                         state.adCount = adSnap.val();
                     }
-
-                    // Sync totalEarning from Firebase if exists
-                    const earningRef = firebaseDb.ref(`users/${currentUserId}/totalEarning`);
-                    const earningSnap = await earningRef.once('value');
-                    if (earningSnap.exists()) {
-                        state.totalEarning = earningSnap.val();
-                    }
-
-                    // Sync referralCount
-                    const referralRef = firebaseDb.ref(`users/${currentUserId}/referralCount`);
-                    const referralSnap = await referralRef.once('value');
-                    if (referralSnap.exists()) {
-                        state.referralCount = referralSnap.val();
-                    }
-
-                    // Sync referralBalance
-                    const refBalRef = firebaseDb.ref(`users/${currentUserId}/referralBalance`);
-                    const refBalSnap = await refBalRef.once('value');
-                    if (refBalSnap.exists()) {
-                        state.referralBalance = refBalSnap.val();
-                    }
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
                 localStorage.setItem('userIdentified', 'true');
+                
+                if (isNewUser) {
+                    state.totalEarning += 50; // Join bonus
+                    saveState();
+                }
                 
                 await handleReferral();
                 await processQualifiedRewards();
@@ -1402,7 +1313,19 @@
                 
                 allDOMElements.watchAdButton.addEventListener('click', watchAd);
                 allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
-                allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
+                allDOMElements.joinChannelButton.addEventListener('click', () => {
+                    safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
+                    safeTgAlert('Please join the channel and return to start earning.');
+                    setTimeout(() => {
+                        if (!state.hasJoinedChannel) {
+                            state.hasJoinedChannel = true;
+                            saveState();
+                            updateUI();
+                            safeTgAlert('Channel joined! You can now watch ads.');
+                            safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                        }
+                    }, 10000);
+                });
                 allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
                 allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
                 allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
