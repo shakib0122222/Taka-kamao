@@ -691,6 +691,34 @@
             joinChannelPopup: document.getElementById('join-channel-popup')
         };
         
+        async function syncUserDataToFirebase(userId, userData = null) {
+            if (!firebaseDb || !userId) return;
+            try {
+                const updates = {
+                    totalEarning: state.totalEarning,
+                    adCount: state.adCount,
+                    referralBalance: state.referralBalance,
+                    referralCount: state.referralCount,
+                    rewardedQualifiedReferrals: state.rewardedQualifiedReferrals,
+                    hasJoinedChannel: state.hasJoinedChannel,
+                    isVIP: state.isVIP,
+                    vipPackage: state.vipPackage ? state.vipPackage.id : null,
+                    vipExpiry: state.vipExpiry,
+                    vipDaysLeft: state.vipDaysLeft,
+                    completedBonusTasks: state.completedBonusTasks,
+                    joinDate: state.joinDate || new Date().toISOString() // Set once
+                };
+                if (userData) {
+                    updates.name = userData.first_name;
+                    updates.username = userData.username || null;
+                    updates.lastName = userData.last_name || null;
+                }
+                await firebaseDb.ref(`users/${userId}`).update(updates);
+            } catch (e) {
+                console.error('Sync error:', e);
+            }
+        }
+        
         function calculateDaysLeft(expiryDate) {
             // Fixed calculation to avoid timezone/DST issues by normalizing to midnight UTC
             const today = new Date();
@@ -705,7 +733,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.hasJoinedChannel) state.hasJoinedChannel = false; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.hasJoinedChannel) state.hasJoinedChannel = false; if (!state.joinDate) state.joinDate = new Date().toISOString(); } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -844,8 +872,9 @@
             adFunction().then(async () => {
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
                 
-                // Sync adCount to Firebase
+                // Sync adCount and totalEarning to Firebase
                 await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
+                await syncUserDataToFirebase(userId);
                 
                 // Check for referral reward trigger
                 if (previousAdCount === 9 && state.referred_by) {
@@ -915,6 +944,7 @@
                 const results = await Promise.all(promises);
                 if (results.some(r => r.ok)) {
                     state.totalEarning -= amount;
+                    await syncUserDataToFirebase(user.id);
                     const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
                     state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
                     saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
@@ -924,7 +954,7 @@
             } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
             finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
         }
-        
+
         function checkPendingWithdrawals() {
             let changed = false;
             state.withdrawalHistory.forEach(item => {
@@ -999,15 +1029,17 @@
             });
         }
 
-        function handleBonusTask(task, button) {
+        async function handleBonusTask(task, button) {
             safeTgAlert('Please join/subscribe to the group/channel and return to claim the bonus. You will be redirected...');
             button.disabled = true; button.textContent = 'Waiting for Verification...';
             safeTgAction(tg => tg.openLink(task.link));
-            setTimeout(() => {
+            setTimeout(async () => {
                 if (state.completedBonusTasks.includes(task.id)) return;
                 safeTgAlert('Verification complete! Bonus claimed.');
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) await syncUserDataToFirebase(userId);
                 saveState(); updateUI(); button.textContent = 'Completed ✓';
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
@@ -1100,6 +1132,7 @@
 
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
+                await syncUserDataToFirebase(user.id);
                 saveState();
                 safeTgAlert('VIP Request Sent! Wait for admin approval.');
                 closeModal('vipModal');
@@ -1133,11 +1166,13 @@
             safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
         }
 
-        function addToMainBalance() {
+        async function addToMainBalance() {
             if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
                 const addedAmount = state.referralBalance;
                 state.totalEarning += state.referralBalance;
                 state.referralBalance = 0;
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) await syncUserDataToFirebase(userId);
                 saveState();
                 updateUI();
                 safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
@@ -1193,6 +1228,7 @@
                 state.referralBalance += bonus;
                 state.rewardedQualifiedReferrals = totalQualified;
                 state.referralCount = totalQualified;
+                await syncUserDataToFirebase(userId);
                 saveState();
                 safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
             } else {
@@ -1215,7 +1251,7 @@
         async function listenForVIPStatus() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
+            firebaseDb.ref(`vip_users/${userId}`).on('value', async (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
@@ -1226,6 +1262,7 @@
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         state.vipDaysLeft = daysLeft;
+                        await syncUserDataToFirebase(userId);
                         saveState();
                         updateUI();
                         const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
@@ -1241,6 +1278,7 @@
                     state.vipDaysLeft = 0;
                     state.vipRequested = false;
                     state.vipRequestTxId = null;
+                    await syncUserDataToFirebase(userId);
                     saveState();
                     updateUI();
                 }
@@ -1322,6 +1360,10 @@
                         return;
                     }
 
+                    // Sync user profile and state to Firebase
+                    const user = tg.initDataUnsafe.user;
+                    await syncUserDataToFirebase(currentUserId, user);
+
                     // Load referred_by
                     const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
                     const referredSnap = await referredByRef.once('value');
@@ -1366,14 +1408,16 @@
                 allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
 
                 // Join Channel Popup Button Event
-                allDOMElements.joinChannelPopup.addEventListener('click', () => {
+                allDOMElements.joinChannelPopup.addEventListener('click', async () => {
                     safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
                     const button = allDOMElements.joinChannelPopup;
                     button.disabled = true;
                     button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> জয়েন করছি...';
                     clearTimeout(joinTimeout);
-                    joinTimeout = setTimeout(() => {
+                    joinTimeout = setTimeout(async () => {
                         state.hasJoinedChannel = true;
+                        const userId = tg ? tg.initDataUnsafe.user.id : null;
+                        if (userId) await syncUserDataToFirebase(userId);
                         saveState();
                         closeModal('joinChannelModal');
                         safeTgAlert('স্বাগতম গ্রুপে! এখন অ্যাড দেখুন এবং আয় করুন। 🍅');
