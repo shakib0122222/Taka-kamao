@@ -421,6 +421,46 @@
             color: var(--text-color);
             font-size: 14px;
         }
+
+        /* Join Channel Modal Special Style - Simplified White Background */
+        #joinChannelModal .modal-content {
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 24px;
+            max-width: 380px;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        #joinChannelModal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--primary-color);
+        }
+        #joinChannelModal p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 16px 0;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        #joinChannelModal .action-button {
+            background: var(--tomato-gradient) !important;
+            font-weight: 700;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+        }
+        #joinChannelModal .action-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
+        #joinChannelModal .note-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 15px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -463,6 +503,17 @@
             <h3 id="welcome-title" class="card-title"></h3>
             <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
             <button class="action-button" onclick="closeModal('welcomeModal')">আমি বুঝেছি</button>
+        </div>
+    </div>
+
+    <!-- Join Channel Modal - Simplified White Background -->
+    <div id="joinChannelModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('joinChannelModal')">&times;</span>
+            <h3>গ্রুপে জয়েন করুন</h3>
+            <p style="line-height: 1.7; font-size: 15px;">অ্যাড দেখার জন্য আমাদের গ্রুপে জয়েন করুন। জয়েন করলে আপনি অ্যাড দেখতে পারবেন এবং আয় করতে পারবেন! 🍅</p>
+            <button class="action-button" id="join-channel-popup"><i class="fa-brands fa-telegram"></i> জয়েন করুন</button>
+            <p class="note-text">জয়েন করার পর ফিরে এসে অ্যাড দেখুন।</p>
         </div>
     </div>
     
@@ -580,7 +631,7 @@
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
             MINIMUM_WITHDRAWAL: 500,
-            MIN_REFERRALS_FOR_WITHDRAW: 10,
+            MIN_REFERRALS_FOR_WITHDRAW: 15,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
             MIN_AD_EARNING_FOR_WITHDRAW: 500,
@@ -606,7 +657,6 @@
                 { id: 'vip_1000', name: 'VIP Platinum', price: 1000, dailyAds: 100, validityDays: 90 }
             ],
             bonusTasks: [
-                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
                 { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
                 { id: 'bonus_03', title: 'YouTube চ্যানেল Subscribe করুন', link: 'https://youtube.com/@experthoiacademy?si=JzntArQaysuDys7R', reward: 10, duration: 30, icon: 'fa-brands fa-youtube' },
                 { id: 'bonus_04', title: 'Facebook Page Follow করুন', link: 'https://www.facebook.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-facebook' },
@@ -622,11 +672,12 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0, hasJoinedChannel: false };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
         let selectedPackage = null;
+        let joinTimeout;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
@@ -636,8 +687,37 @@
             greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
-            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance'),
+            joinChannelPopup: document.getElementById('join-channel-popup')
         };
+        
+        async function syncUserDataToFirebase(userId, userData = null) {
+            if (!firebaseDb || !userId) return;
+            try {
+                const updates = {
+                    totalEarning: state.totalEarning,
+                    adCount: state.adCount,
+                    referralBalance: state.referralBalance,
+                    referralCount: state.referralCount,
+                    rewardedQualifiedReferrals: state.rewardedQualifiedReferrals,
+                    hasJoinedChannel: state.hasJoinedChannel,
+                    isVIP: state.isVIP,
+                    vipPackage: state.vipPackage ? state.vipPackage.id : null,
+                    vipExpiry: state.vipExpiry,
+                    vipDaysLeft: state.vipDaysLeft,
+                    completedBonusTasks: state.completedBonusTasks,
+                    joinDate: state.joinDate || new Date().toISOString() // Set once
+                };
+                if (userData) {
+                    updates.name = userData.first_name;
+                    updates.username = userData.username || null;
+                    updates.lastName = userData.last_name || null;
+                }
+                await firebaseDb.ref(`users/${userId}`).update(updates);
+            } catch (e) {
+                console.error('Sync error:', e);
+            }
+        }
         
         function calculateDaysLeft(expiryDate) {
             // Fixed calculation to avoid timezone/DST issues by normalizing to midnight UTC
@@ -653,27 +733,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
-
-        // Function to sync user data to Firebase
-        async function syncUserToFirebase(userId, userData) {
-            if (!firebaseDb || !userId) return;
-            try {
-                await firebaseDb.ref(`users/${userId}`).update({
-                    ...userData,
-                    totalEarning: state.totalEarning,
-                    adCount: state.adCount,
-                    referralCount: state.referralCount,
-                    referralBalance: state.referralBalance,
-                    joinDate: state.joinDate || new Date().toISOString(), // Ensure joinDate is set
-                    name: tg ? tg.initDataUnsafe.user.first_name : 'Unknown',
-                    username: tg ? tg.initDataUnsafe.user.username : null,
-                    banned: false // Default not banned
-                });
-            } catch (e) {
-                console.error("Firebase sync error:", e);
-            }
-        }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.hasJoinedChannel) state.hasJoinedChannel = false; if (!state.joinDate) state.joinDate = new Date().toISOString(); } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
         function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
@@ -708,12 +768,6 @@
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
-
-            // Sync to Firebase after UI update
-            const userId = tg ? tg.initDataUnsafe.user.id : null;
-            if (userId) {
-                syncUserToFirebase(userId, { adCount: state.adCount, referralCount: state.referralCount, referralBalance: state.referralBalance });
-            }
 
             // VIP Expiry Check & Countdown
             if (state.isVIP && state.vipExpiry) {
@@ -797,33 +851,13 @@
                 } 
             });
         }
-
-        // Function to create/sync initial user profile
-        async function createUserProfile(userId, user) {
-            if (!firebaseDb || !userId) return;
-            try {
-                const userRef = firebaseDb.ref(`users/${userId}`);
-                const snapshot = await userRef.once('value');
-                if (!snapshot.exists()) {
-                    await userRef.set({
-                        name: user.first_name || 'Unknown',
-                        username: user.username || null,
-                        joinDate: new Date().toISOString(),
-                        totalEarning: 0.0,
-                        adCount: 0,
-                        referralCount: 0,
-                        referralBalance: 0.0,
-                        banned: false
-                    });
-                    state.joinDate = new Date().toISOString(); // Set local state
-                    saveState();
-                }
-            } catch (e) {
-                console.error("User profile creation error:", e);
-            }
-        }
         
         async function watchAd() {
+            if (!state.hasJoinedChannel) {
+                showModal('joinChannelModal');
+                return;
+            }
+
             const userId = tg ? tg.initDataUnsafe.user.id : null;
             if (!userId) return;
             const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
@@ -838,11 +872,9 @@
             adFunction().then(async () => {
                 state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
                 
-                // Sync adCount to Firebase
+                // Sync adCount and totalEarning to Firebase
                 await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
-                
-                // Sync totalEarning
-                await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                await syncUserDataToFirebase(userId);
                 
                 // Check for referral reward trigger
                 if (previousAdCount === 9 && state.referred_by) {
@@ -912,6 +944,7 @@
                 const results = await Promise.all(promises);
                 if (results.some(r => r.ok)) {
                     state.totalEarning -= amount;
+                    await syncUserDataToFirebase(user.id);
                     const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
                     state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
                     saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
@@ -921,7 +954,7 @@
             } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
             finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
         }
-        
+
         function checkPendingWithdrawals() {
             let changed = false;
             state.withdrawalHistory.forEach(item => {
@@ -1005,15 +1038,9 @@
                 safeTgAlert('Verification complete! Bonus claimed.');
                 state.totalEarning += task.reward;
                 state.completedBonusTasks.push(task.id);
-                saveState(); updateUI();
-
-                // Sync updated totalEarning to Firebase
                 const userId = tg ? tg.initDataUnsafe.user.id : null;
-                if (userId) {
-                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
-                }
-
-                button.textContent = 'Completed ✓';
+                if (userId) await syncUserDataToFirebase(userId);
+                saveState(); updateUI(); button.textContent = 'Completed ✓';
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             }, task.duration * 1000);
         }
@@ -1105,6 +1132,7 @@
 
                 state.vipRequested = true;
                 state.vipRequestTxId = txid;
+                await syncUserDataToFirebase(user.id);
                 saveState();
                 safeTgAlert('VIP Request Sent! Wait for admin approval.');
                 closeModal('vipModal');
@@ -1143,18 +1171,10 @@
                 const addedAmount = state.referralBalance;
                 state.totalEarning += state.referralBalance;
                 state.referralBalance = 0;
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) await syncUserDataToFirebase(userId);
                 saveState();
                 updateUI();
-
-                // Sync updated balances to Firebase
-                const userId = tg ? tg.initDataUnsafe.user.id : null;
-                if (userId) {
-                    await firebaseDb.ref(`users/${userId}`).update({
-                        totalEarning: state.totalEarning,
-                        referralBalance: state.referralBalance
-                    });
-                }
-
                 safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } else {
@@ -1185,7 +1205,11 @@
             const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
             await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
 
-            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus if they watch 10 ads.`;
+            // Fixed message to handle undefined username
+            let message = `🎉 Congratulations! User ${escapeHTML(currentUser.first_name || 'User')} joined using your link. You will receive your bonus if they watch 10 ads.`;
+            if (currentUser.username) {
+                message += ` (@${escapeHTML(currentUser.username)})`;
+            }
             await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
         }
 
@@ -1204,18 +1228,13 @@
                 state.referralBalance += bonus;
                 state.rewardedQualifiedReferrals = totalQualified;
                 state.referralCount = totalQualified;
+                await syncUserDataToFirebase(userId);
                 saveState();
-                updateUI();
-
-                // Sync referral balance
-                await firebaseDb.ref(`users/${userId}/referralBalance`).set(state.referralBalance);
-                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
-
                 safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
             } else {
                 state.referralCount = totalQualified;
-                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
             }
+            updateUI();
         }
 
         async function listenForQualifiedReferrals() {
@@ -1232,7 +1251,7 @@
         async function listenForVIPStatus() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
-            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
+            firebaseDb.ref(`vip_users/${userId}`).on('value', async (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.active) {
                     const expiryDate = new Date(data.expiry);
@@ -1243,8 +1262,7 @@
                         state.vipPackage = pkg;
                         state.vipExpiry = data.expiry;
                         state.vipDaysLeft = daysLeft;
-                        state.vipRequested = false; // Reset pending when activated
-                        state.vipRequestTxId = null;
+                        await syncUserDataToFirebase(userId);
                         saveState();
                         updateUI();
                         const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
@@ -1252,44 +1270,17 @@
                     } else {
                         // Auto deactivate if expired
                         firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
-                        state.isVIP = false;
-                        state.vipPackage = null;
-                        state.vipExpiry = null;
-                        state.vipDaysLeft = 0;
-                        saveState();
-                        updateUI();
                     }
                 } else {
                     state.isVIP = false;
                     state.vipPackage = null;
                     state.vipExpiry = null;
                     state.vipDaysLeft = 0;
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
+                    await syncUserDataToFirebase(userId);
                     saveState();
                     updateUI();
-                }
-            });
-        }
-
-        // NEW: Listener for VIP Request Pending Status
-        async function listenForVIPRequestStatus() {
-            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
-            const userId = tg.initDataUnsafe.user.id;
-            firebaseDb.ref(`vip_requests/${userId}`).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.status === 'pending') {
-                    state.vipRequested = true;
-                    state.vipRequestTxId = data.txid;
-                    saveState();
-                    updateUI(); // This will trigger re-render if bonus modal is open
-                } else if (data && data.status === 'approved') {
-                    // Handled by VIP status listener
-                    state.vipRequested = false;
-                    state.vipRequestTxId = null;
-                    saveState();
-                } else {
-                    state.vipRequested = false;
-                    state.vipRequestTxId = null;
-                    saveState();
                 }
             });
         }
@@ -1335,10 +1326,9 @@
                 }
             };
 
-            // FASTER PRELOADER: Shorter interval and faster progression
             let percentage = 0;
             const interval = setInterval(() => {
-                percentage += Math.floor(Math.random() * 8) + 3; // Faster increment
+                percentage += Math.floor(Math.random() * 5) + 1;
                 if (percentage > 100) percentage = 100;
                 allDOMElements.preloaderPercentage.textContent = `${percentage}%`;
                 if (percentage >= 100) {
@@ -1346,21 +1336,19 @@
                     preloaderAnimationDone = true;
                     tryFinishLoading();
                 }
-            }, 30); // Shorter interval: 30ms instead of 60ms
-
-            // EARLY LOADS: Load Monetag and populate methods immediately (non-blocking)
-            loadMonetagSDK(); 
-            populateWithdrawalMethods();
+            }, 60);
 
             try {
-                // FASTER INIT: Parallelize non-dependent tasks
+                loadMonetagSDK(); 
                 initFirebase();
+               
+                populateWithdrawalMethods();
 
                 allDOMElements.welcomeTitle.textContent = config.welcomeNotice.title;
                 allDOMElements.welcomeMessage.textContent = generateWelcomeMessage();
 
-                // Parallel: DB init and Firebase setup
-                await Promise.all([initDB(), loadState()]);
+                await initDB(); 
+                await loadState();
 
                 const currentUserId = tg ? tg.initDataUnsafe?.user?.id : null;
                 if (currentUserId) {
@@ -1372,40 +1360,30 @@
                         return;
                     }
 
-                    // Create user profile if not exists (non-blocking parallel)
+                    // Sync user profile and state to Firebase
                     const user = tg.initDataUnsafe.user;
-                    createUserProfile(currentUserId, user); // Fire and forget if possible
+                    await syncUserDataToFirebase(currentUserId, user);
 
-                    // Parallel Firebase snaps
-                    const [
-                        referredSnap,
-                        adSnap,
-                        earningSnap,
-                        referralSnap,
-                        refBalSnap
-                    ] = await Promise.all([
-                        firebaseDb.ref(`users/${currentUserId}/referred_by`).once('value'),
-                        firebaseDb.ref(`users/${currentUserId}/adCount`).once('value'),
-                        firebaseDb.ref(`users/${currentUserId}/totalEarning`).once('value'),
-                        firebaseDb.ref(`users/${currentUserId}/referralCount`).once('value'),
-                        firebaseDb.ref(`users/${currentUserId}/referralBalance`).once('value')
-                    ]);
-
+                    // Load referred_by
+                    const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
+                    const referredSnap = await referredByRef.once('value');
                     state.referred_by = referredSnap.val() || null;
-                    if (adSnap.exists()) state.adCount = adSnap.val();
-                    if (earningSnap.exists()) state.totalEarning = earningSnap.val();
-                    if (referralSnap.exists()) state.referralCount = referralSnap.val();
-                    if (refBalSnap.exists()) state.referralBalance = refBalSnap.val();
+
+                    // Sync adCount from Firebase
+                    const adRef = firebaseDb.ref(`users/${currentUserId}/adCount`);
+                    const adSnap = await adRef.once('value');
+                    if (adSnap.exists()) {
+                        state.adCount = adSnap.val();
+                    }
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
                 localStorage.setItem('userIdentified', 'true');
                 
-                // Parallel non-dependent tasks
-                await Promise.all([handleReferral(), processQualifiedRewards()]);
-                listenForQualifiedReferrals();
-                listenForVIPStatus();
-                listenForVIPRequestStatus(); // NEW: Added listener for pending status
+                await handleReferral();
+                await processQualifiedRewards();
+                await listenForQualifiedReferrals();
+                await listenForVIPStatus();
                 
                 setInterval(checkPendingWithdrawals, 60 * 1000);
 
@@ -1428,6 +1406,26 @@
                 allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
                 allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
                 allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
+
+                // Join Channel Popup Button Event
+                allDOMElements.joinChannelPopup.addEventListener('click', async () => {
+                    safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK));
+                    const button = allDOMElements.joinChannelPopup;
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> জয়েন করছি...';
+                    clearTimeout(joinTimeout);
+                    joinTimeout = setTimeout(async () => {
+                        state.hasJoinedChannel = true;
+                        const userId = tg ? tg.initDataUnsafe.user.id : null;
+                        if (userId) await syncUserDataToFirebase(userId);
+                        saveState();
+                        closeModal('joinChannelModal');
+                        safeTgAlert('স্বাগতম গ্রুপে! এখন অ্যাড দেখুন এবং আয় করুন। 🍅');
+                        safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                        watchAd(); // Auto trigger ad watch after join
+                    }, 10000); // 10 seconds timeout for verification
+                });
+
                 window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
 
                 safeTgAction(tg => {
