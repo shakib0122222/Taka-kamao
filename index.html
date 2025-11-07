@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Taka Income Pro - Earn Money</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // --- INSTANT THEME APPLY SCRIPT ---
+        (function() {
+            try {
+                const tg = window.Telegram.WebApp;
+                const isDark = tg.colorScheme === 'dark';
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {
+                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap');
+        :root { 
+            --primary-color: #ff6347; /* টমেটু রঙ */
+            --primary-color-rgb: 255, 99, 71; 
+            --secondary-color: #e5533d; /* গাঢ় টমেটু */
+            --background-color: #F0F2F5; 
+            --card-background: #FFFFFF; 
+            --text-color: #1D1D1F; 
+            --text-light: #6E6E73; 
+            --border-color: #E5E5EA; 
+            --glass-bg: rgba(240, 242, 245, 0.8); 
+            --tomato-color: #ff6347;
+            --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
+            --vip-gold: #ffd700;
+            --vip-king-bg: linear-gradient(135deg, #ffd700, #ffed4e);
+        }
+        [data-theme="dark"] { 
+            --primary-color: #ff6347; 
+            --primary-color-rgb: 255, 99, 71; 
+            --secondary-color: #e5533d;
+            --background-color: #000000; 
+            --card-background: #1C1C1E; 
+            --text-color: #F5F5F7; 
+            --text-light: #8E8E93; 
+            --border-color: #3A3A3C; 
+            --glass-bg: rgba(28, 28, 30, 0.8); 
+            --tomato-color: #ff6347;
+            --tomato-gradient: linear-gradient(135deg, #ff6347, #e5533d, #d43f2a);
+            --vip-gold: #ffd700;
+            --vip-king-bg: linear-gradient(135deg, #ffd700, #ffed4e);
+        }
+        
+        * { box-sizing: border-box; }
+        html, body { overscroll-behavior-y: contain; }
+        body { font-family: 'Noto Sans', sans-serif; margin: 0; padding: 20px 15px 100px 15px; background: var(--tomato-gradient), var(--background-color); background-size: cover; background-blend-mode: overlay; color: var(--text-color); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
+        
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: var(--tomato-gradient), var(--background-color); background-size: cover; background-blend-mode: overlay; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s ease; }
+        #preloader i { font-size: 48px; color: var(--primary-color); animation: spin 1.5s linear infinite; }
+        #preloader-percentage { font-size: 20px; font-weight: 700; color: var(--text-color); }
+        #preloader-footer { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 15px; z-index: 10000; transition: opacity 0.5s ease; }
+        #preloader-footer a { font-size: 14px; font-weight: 500; color: var(--text-light); text-decoration: none; }
+
+        .container { max-width: 500px; margin: 0 auto; display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; animation: fadeIn 0.5s ease-out; }
+        #profile-pic { width: 52px; height: 52px; border-radius: 50%; background: var(--tomato-gradient); background-size: cover; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; border: 2px solid var(--card-background); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; position: relative; }
+        #profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .vip-king-badge { position: absolute; top: -5px; left: -5px; width: 24px; height: 24px; background: var(--vip-king-bg); border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: pulse 2s infinite; z-index: 1; }
+        #greeting { font-size: 22px; font-weight: 800; }
+        #greeting .vip-status { font-size: 14px; color: var(--vip-gold); font-weight: 600; display: block; margin-top: 2px; text-shadow: 0 0 5px rgba(255,215,0,0.5); }
+        #greeting .vip-countdown { font-size: 12px; color: var(--text-light); }
+        
+        .balance-card { position: relative; overflow: hidden; background: var(--tomato-gradient); color: white; padding: 28px; border-radius: 24px; text-align: center; margin-bottom: 20px; box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.3); animation: fadeIn 0.6s ease-out; }
+        .balance-card::after { content: '\f51e'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: -20px; bottom: -30px; font-size: 120px; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
+        .balance-card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 500; opacity: 0.9; z-index: 1; position: relative; }
+        .balance-card .amount { font-size: 48px; font-weight: 800; line-height: 1.2; z-index: 1; position: relative; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-item { position: relative; overflow: hidden; background: var(--card-background); padding: 20px; border-radius: 18px; text-align: center; border: 1px solid var(--border-color); animation: fadeIn 0.7s ease-out; transition: background-color 0.3s, border-color 0.3s; background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.9; }
+        .stat-item .bg-icon { position: absolute; right: 5px; bottom: 5px; font-size: 50px; opacity: 0.08; color: var(--text-color); pointer-events: none; }
+        .stat-item .icon { font-size: 28px; color: var(--primary-color); margin-bottom: 12px; }
+        .stat-item .value { font-size: 24px; font-weight: 800; }
+        .stat-item .label { font-size: 14px; color: var(--text-light); }
+        
+        .card { background-color: var(--card-background); padding: 20px; border-radius: 18px; margin-bottom: 20px; border: 1px solid var(--border-color); animation: fadeIn 0.8s ease-out; transition: background-color 0.3s, border-color 0.3s; background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.95; }
+        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0.4); } 70% { box-shadow: 0 0 0 10px rgba(var(--primary-color-rgb), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0); } }
+        .action-button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--tomato-gradient); color: white; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .action-button.pulsing { animation: pulse 2s infinite; }
+        .action-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(var(--primary-color-rgb), 0.3); }
+        .action-button:disabled { background-color: #8E8E93; cursor: not-allowed; }
+        .secondary-button { background-color: transparent !important; color: white !important; border: 2px solid white; margin-top: 15px; font-size: 16px; font-weight: 600; }
+        .secondary-button:hover { background-color: rgba(255, 255, 255, 0.1); color: white !important; }
+        
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 15px; background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; z-index: 100; background: var(--tomato-gradient), var(--glass-bg); background-size: cover; background-blend-mode: overlay; opacity: 0.95; }
+        .nav-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; border-radius: 12px; color: var(--text-light); text-decoration: none; font-size: 12px; font-weight: 500; border: none; background: transparent; cursor: pointer; transition: all 0.2s ease; }
+        .nav-button.active, .nav-button:hover { color: var(--primary-color); background-color: rgba(var(--primary-color-rgb), 0.1); }
+        .nav-button i { font-size: 20px; }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            align-items: center; 
+            justify-content: center; 
+            animation: fadeIn 0.3s ease-out; 
+        }
+        #bonusTasksModal {
+            align-items: stretch;
+            padding: 0;
+            justify-content: stretch;
+            z-index: 1000;
+        }
+        #vipModal {
+            z-index: 1001;
+        }
+        #bonusTasksModal .modal-content { 
+            width: 100%; 
+            height: 100vh; 
+            max-width: none; 
+            max-height: none; 
+            margin: 0; 
+            border-radius: 0; 
+            overflow-y: auto; 
+            scrollbar-width: thin; 
+            scrollbar-color: var(--primary-color) transparent;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #bonusTasksModal .modal-content::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        .modal-content { 
+            background-color: var(--card-background); 
+            padding: 24px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            box-sizing: border-box; 
+            animation: slideIn 0.3s ease-out; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; opacity: 0.95;
+        }
+        @keyframes slideIn { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close-button { color: #aaa; float: right; font-size: 28px; line-height: 1; font-weight: bold; cursor: pointer; }
+        .modal-content input, .modal-content select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; font-family: 'Noto Sans', sans-serif; font-size: 16px; background-color: var(--background-color); color: var(--text-color); transition: border-color 0.2s, box-shadow 0.2s; }
+        .modal-content input:focus, .modal-content select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2); }
+        
+        #bonus-tasks-list .bonus-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 18px; 
+            background-color: var(--card-background); 
+            border-radius: 16px; 
+            margin-bottom: 15px; 
+            border: 2px solid var(--border-color); 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .bonus-item:hover { border-color: var(--primary-color); box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.2); }
+        .bonus-item .bonus-header { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .bonus-item .icon { font-size: 28px; margin-right: 0; width: 35px; height: 35px; object-fit: contain; }
+        .bonus-item .details { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+        .bonus-item .title { font-weight: 700; font-size: 15px; color: var(--text-color); margin: 0; }
+        .bonus-item .reward { font-size: 17px; font-weight: 800; color: var(--primary-color); margin: 0; }
+        .bonus-item .reward i { margin-right: 6px; font-size: 15px; }
+        .bonus-item .claim-button { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            border-radius: 12px; 
+            background: var(--tomato-gradient); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            min-width: 100px;
+            box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+        }
+        .bonus-item .claim-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(var(--primary-color-rgb), 0.3); }
+        .bonus-item .claim-button:disabled { background-color: #8E8E93; cursor: not-allowed; transform: none; }
+
+        /* VIP Item Style */
+        .vip-item { 
+            border: 2px solid var(--vip-gold) !important; 
+            background: var(--vip-king-bg) !important; 
+            color: #000 !important; 
+            animation: pulse 2s infinite;
+        }
+        .vip-item .title { color: #000 !important; font-weight: 800; }
+        .vip-item .reward { color: #000 !important; font-weight: 700; }
+        .vip-item .claim-button { background: #000 !important; color: var(--vip-gold) !important; border: 1px solid var(--vip-gold) !important; }
+
+        /* VIP Modal Special Style */
+        #vipModal { align-items: stretch; justify-content: stretch; }
+        #vipModal .modal-content { 
+            width: 100%; height: 100vh; max-width: none; max-height: none; margin: 0; border-radius: 0; 
+            padding: 20px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--vip-gold) transparent; 
+            background: var(--tomato-gradient), var(--card-background); background-size: cover; background-blend-mode: overlay; 
+        }
+        #vipModal .modal-content::-webkit-scrollbar { width: 6px; }
+        #vipModal .modal-content::-webkit-scrollbar-track { background: transparent; }
+        #vipModal .modal-content::-webkit-scrollbar-thumb { background: var(--vip-gold); border-radius: 3px; }
+        #vipModal .close-button { position: fixed; top: 20px; right: 20px; z-index: 1001; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; }
+        #vipModal h3 { color: var(--vip-gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); text-align: center; margin-bottom: 20px; }
+        #vip-packages .vip-package { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--card-background); border-radius: 16px; margin: 15px 0; border: 2px solid var(--border-color); transition: all 0.3s; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #vip-packages .vip-package:hover { border-color: var(--vip-gold); box-shadow: 0 4px 16px rgba(255,215,0,0.3); }
+        #vip-packages .vip-package.selected { border-color: var(--vip-gold); background: rgba(255,215,0,0.1); box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
+        #payment-guide { background: rgba(255,215,0,0.1); border: 2px solid var(--vip-gold); border-radius: 16px; padding: 20px; margin: 20px; text-align: left; }
+        #payment-guide p { margin: 10px 0; font-weight: 600; }
+        #txid-input { margin: 10px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; }
+
+        .history-item { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .history-item:last-child { border-bottom: none; }
+        .history-details { display: flex; flex-direction: column; gap: 4px; }
+        .history-details .method-number { font-weight: 700; font-size: 16px; }
+        .history-details .date { font-size: 12px; color: var(--text-light); }
+        .history-amount { font-size: 18px; font-weight: 800; text-align: right; }
+        .history-status { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
+        .history-status.success { color: #28a745; background-color: rgba(40, 167, 69, 0.1); }
+        .history-status.pending { color: #fd7e14; background-color: rgba(253, 126, 20, 0.1); }
+        .no-history { text-align: center; padding: 40px 20px; color: var(--text-light); }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--secondary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+        #ad-loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 15px; color: white; font-size: 16px; }
+        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--primary-color); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        #multiAccountModal .modal-content { text-align: center; border-radius: 20px; max-height: initial;}
+        #multiAccountModal { align-items: center; justify-content: center; }
+
+        /* Welcome Modal Special Style */
+        #welcomeModal .modal-content {
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 24px;
+            max-width: 380px;
+        }
+        #welcomeModal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--primary-color);
+        }
+        #welcomeModal p {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 16px 0;
+            color: var(--text-color);
+        }
+        #welcomeModal .action-button {
+            background: var(--tomato-gradient) !important;
+            font-weight: 700;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(255, 99, 71, 0.3);
+        }
+        #welcomeModal .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 99, 71, 0.4);
+        }
+
+        /* Support Modal Styles */
+        #supportModal .support-section { text-align: left; margin-bottom: 20px; }
+        #supportModal .support-item { display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--card-background); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+        #supportModal .support-icon { font-size: 24px; color: var(--primary-color); width: 40px; }
+        #supportModal .support-text { flex: 1; font-weight: 600; }
+        #supportModal .support-button { padding: 10px 20px; border: none; border-radius: 8px; background: var(--tomato-gradient); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; min-width: 120px; }
+        #supportModal .support-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); }
+
+        /* Referral Balance Card Style */
+        .referral-card {
+            background: var(--tomato-gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-card::before {
+            content: '\f1e0';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            font-size: 80px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .referral-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .referral-card .balance-amount {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        .referral-card .threshold-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+        .referral-card .action-button {
+            background: white;
+            color: black;
+            font-weight: 700;
+        }
+        .referral-card .action-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Withdraw Modal Note Style - Highlighted Note */
+        .withdraw-note {
+            background: rgba(var(--primary-color-rgb), 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            position: relative;
+        }
+        .withdraw-note::before {
+            content: '📝';
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .withdraw-note.highlight {
+            box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Withdraw Modal Payment Methods Styles */
+        .payment-method-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 10px 0 15px 0;
+            color: var(--text-color);
+            text-align: left;
+        }
+        .payment-methods-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .payment-method-option {
+            flex: 1;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 15px 10px;
+            border: 2px solid var(--border-color);
+            background: var(--card-background);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .payment-method-option:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.1);
+        }
+        .payment-method-option:has(input:checked) {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+            background: rgba(var(--primary-color-rgb), 0.05);
+        }
+        .payment-method-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .method-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .method-logo {
+            width: 60px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .method-name {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="preloader">
+        <i class="fa-solid fa-spinner"></i>
+        <div id="preloader-percentage">0%</div>
+    </div>
+    <div id="preloader-footer">
+        <a href="#" target="_blank">Developed By SAKIB HOSSAIN</a>
+    </div>
+    
+    <div id="ad-loader-overlay"><div class="loader"></div><span>Loading Ad...</span></div>
+    
+    <div class="container">
+        <div class="profile-header">
+            <div id="profile-pic"><i class="fa-solid fa-user"></i></div>
+            <h1 id="greeting">Welcome!</h1>
+        </div>
+        <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
+        <div class="stats-grid">
+            <div class="stat-item"><i class="fa-solid fa-rectangle-ad bg-icon"></i><div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div><div class="value" id="ad-count">0</div><div class="label">Ads Watched</div></div>
+            <div class="stat-item"><i class="fa-solid fa-calendar-day bg-icon"></i><div class="icon"><i class="fa-solid fa-calendar-day"></i></div><div class="value" id="ads-today-count">0 / 15</div><div class="label">Today's Ads</div></div>
+            <div class="stat-item"><i class="fa-solid fa-users bg-icon"></i><div class="icon"><i class="fa-solid fa-users"></i></div><div class="value" id="referral-count">0</div><div class="label">Referrals</div></div>
+        </div>
+        <div class="card"><h3 class="card-title">Today's Task</h3><button class="action-button" id="watch-ad-button"><i class="fa-solid fa-play"></i><span>Watch Ad</span></button><button class="action-button secondary-button" id="join-channel-button"><i class="fa-brands fa-telegram"></i><span>Join Channel</span></button></div>
+        <div class="card"><h3 class="card-title">Weekly Activity</h3><div class="chart-container"><canvas id="activityChart"></canvas></div></div>
+    </div>
+    <div class="nav-bar">
+        <button class="nav-button" onclick="showModal('withdrawModal', this)"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></button>
+        <button class="nav-button" onclick="showModal('historyModal', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></button>
+        <button class="nav-button" onclick="showModal('inviteModal', this)"><i class="fa-solid fa-user-plus"></i><span>Refer</span></button>
+        <button class="nav-button" onclick="showModal('supportModal', this)"><i class="fa-solid fa-headset"></i><span>Support</span></button>
+        <button class="nav-button" onclick="showModal('bonusTasksModal', this)"><i class="fa-solid fa-star"></i><span>Bonus</span></button>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('welcomeModal')">&times;</span>
+            <h3 id="welcome-title" class="card-title"></h3>
+            <p id="welcome-message" style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;"></p>
+            <button class="action-button" onclick="closeModal('welcomeModal')">আমি বুঝেছি</button>
+        </div>
+    </div>
+    
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
+            <h3 class="card-title">Withdraw Funds</h3>
+            <p id="min-withdraw-text"></p>
+            <div id="referral-requirement-note" class="withdraw-note highlight"></div>
+            <form id="withdraw-form">
+                <h4 class="payment-method-header">Payment Method</h4>
+                <div id="payment-methods-container" class="payment-methods-container"></div>
+                <input type="text" id="account-number" placeholder="Enter Account Number" required>
+                <input type="number" step="0.01" id="withdraw-amount" placeholder="Amount in BDT" required>
+                <button type="submit" class="action-button" id="withdraw-submit-button">
+                    <span class="button-text">Submit Request</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIP Modal - Full Page Style -->
+    <div id="vipModal" class="modal">
+        <span class="close-button" onclick="closeModal('vipModal')">&times;</span>
+        <div class="modal-content">
+            <h3 class="card-title">VIP Membership Plans</h3>
+            <div id="vip-packages"></div>
+            <div id="payment-guide" style="display: none;">
+                <h4 style="color: var(--vip-gold);">Payment Instructions</h4>
+                <p id="payment-instruction">Send <strong>৳<span id="selected-amount">0</span></strong> to: <strong>Bkash/Nagad: 01925723245</strong></p>
+                <button class="action-button secondary-button" onclick="copyPaymentNumber()" style="margin: 10px 0;">
+                    <i class="fa-solid fa-copy"></i> Copy Number
+                </button>
+                <input type="text" id="txid-input" placeholder="Enter Transaction ID" style="margin: 10px 0; width: 100%;">
+                <button class="action-button" id="vip-request-btn">
+                    <span>Submit VIP Request</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="supportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('supportModal')">&times;</span>
+            <h3 class="card-title">Support</h3>
+            <div class="support-section">
+                <div class="support-item">
+                    <i class="fa-solid fa-user-tie support-icon"></i>
+                    <span class="support-text">সাপোর্ট এডমিন</span>
+                    <button class="support-button" onclick="openSupportLink()">সাপোর্ট</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-video support-icon"></i>
+                    <span class="support-text">টিউটরিয়াল</span>
+                    <button class="support-button" onclick="openTutorialLink()">Watch টিউটরিয়াল</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-brands fa-telegram support-icon"></i>
+                    <span class="support-text">আমাদের টেলিগ্রাম গ্রোপ</span>
+                    <button class="support-button" onclick="openGroupLink()">Join Group</button>
+                </div>
+                <div class="support-item">
+                    <i class="fa-solid fa-receipt support-icon"></i>
+                    <span class="support-text">পেমেন্ট প্রুফ এর টেলিগ্রাম চেনেল</span>
+                    <button class="support-button" onclick="openPaymentProofLink()">View Channel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="historyModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('historyModal')">&times;</span><h3 class="card-title">Withdrawal History</h3><div id="history-list"></div></div></div>
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('inviteModal')">&times;</span>
+            <h3 class="card-title">Invite Friends</h3>
+            <p>Share your referral link with your friends. Earn ৳50 for each friend who watches 10 ads!</p>
+            <div class="referral-card">
+                <h4>Referral Balance</h4>
+                <div class="balance-amount" id="referral-balance-text">৳0.00</div>
+                <p class="threshold-note">Minimum ৳100 required to add to main balance</p>
+                <button class="action-button" id="add-to-main-balance"><i class="fa-solid fa-plus"></i><span>Add to Main Balance</span></button>
+            </div>
+            <button class="action-button" id="copy-link-button"><i class="fa-solid fa-copy"></i><span>Copy Link</span></button>
+            <button class="action-button secondary-button" id="share-link-button"><i class="fa-solid fa-share-nodes"></i><span>Share Link</span></button>
+        </div>
+    </div>
+    <div id="bonusTasksModal" class="modal"><div class="modal-content"><span class="close-button" onclick="closeModal('bonusTasksModal')">&times;</span><h3 class="card-title">Bonus Tasks</h3><p style="text-align: center; margin-bottom: 20px;">Complete these one-time tasks to earn extra rewards! Remember to join/subscribe before claiming.</p><div id="bonus-tasks-list"></div></div></div>
+    
+    <!-- Multi Account Warning (Bengali) -->
+    <div id="multiAccountModal" class="modal">
+        <div class="modal-content">
+            <h3 class="card-title" style="color: #ff4444;">⚠️সতর্কতা</h3>
+            <p style="font-size: 15px; line-height: 1.7;">
+                একাধিক অ্যাকাউন্ট অনুমোদিত নয়।<br>
+                এই ডিভাইসে শুধুমাত্র একটি টেলিগ্রাম অ্যাকাউন্ট ব্যবহার করা যাবে।<br>
+                দয়া করে আপনার মূল অ্যাকাউন্ট দিয়ে চালিয়ে যান।
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION (UPDATED FOR BDT) ---
+        const config = {
+            BOT_TOKEN: '8592541498:AAHn5vYf8qlMuVrBt_OIbR8VhdG0gGO3vOA',
+            ADMIN_IDS: [7731349577],
+            BOT_USERNAME: 'red_tomato_earning_bot',
+            TELEGRAM_CHANNEL_LINK: 'https://t.me/tomato_payment',
+            ADMIN_SUPPORT_LINK: 'https://t.me/tomato_admin_bot',
+            TUTORIAL_LINK: 'https://www.youtube.com/@shakibexplainer',
+            GROUP_LINK: 'https://t.me/shakibexplainer',
+            PAYMENT_PROOF_LINK: 'https://t.me/tomato_payment',
+            MONETAG_ZONE_ID: '10072766',
+            AD_REWARD: 5,
+            DAILY_AD_LIMIT: 10,
+            MINIMUM_WITHDRAWAL: 500,
+            MIN_REFERRALS_FOR_WITHDRAW: 10,
+            COOLDOWN_MINUTES: 1440,
+            REFERRAL_MIN_ADD: 100,
+            MIN_AD_EARNING_FOR_WITHDRAW: 500,
+            withdrawalMethods: ['Bkash', 'Nagad'],
+            PAYMENT_NUMBER: '01925723245',
+            firebase: {
+                apiKey: "AIzaSyCWvaqpi3LvNDeZpDBunnDwU392ZH_FY8M",
+                authDomain: "st-project-taka-kamao.firebaseapp.com",
+                databaseURL: "https://st-project-taka-kamao-default-rtdb.firebaseio.com",
+                projectId: "st-project-taka-kamao",
+                storageBucket: "st-project-taka-kamao.firebasestorage.app",
+                messagingSenderId: "151575920757",
+                appId: "1:151575920757:web:5dc8e0e2a0856f5a76b83c",
+                measurementId: "G-V0QDHQ27L3"
+            },
+            REFERRAL_REWARD: 50,
+            QUALIFIED_ADS_REQUIRED: 10,
+            VIP_PACKAGES: [
+                { id: 'vip_50', name: 'VIP Starter', price: 50, dailyAds: 15, validityDays: 5 },
+                { id: 'vip_100', name: 'VIP Basic', price: 100, dailyAds: 25, validityDays: 7 },
+                { id: 'vip_200', name: 'VIP Pro', price: 200, dailyAds: 35, validityDays: 10 },
+                { id: 'vip_500', name: 'VIP Gold', price: 500, dailyAds: 50, validityDays: 30 },
+                { id: 'vip_1000', name: 'VIP Platinum', price: 1000, dailyAds: 100, validityDays: 90 }
+            ],
+            bonusTasks: [
+                { id: 'bonus_01', title: 'আমাদের চ্যানেল ভিজিট করুন', link: 'https://t.me/tomato_payment', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_02', title: 'অন্য অ্যাপটি দেখুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_03', title: 'YouTube চ্যানেল Subscribe করুন', link: 'https://youtube.com/@experthoiacademy?si=JzntArQaysuDys7R', reward: 10, duration: 30, icon: 'fa-brands fa-youtube' },
+                { id: 'bonus_04', title: 'Facebook Page Follow করুন', link: 'https://www.facebook.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-facebook' },
+                { id: 'bonus_05', title: 'আরেকটি চ্যানেল জয়েন করুন', link: 'https://t.me/shakibexplainer', reward: 5, duration: 20, icon: 'fa-brands fa-telegram' },
+                { id: 'bonus_06', title: 'Instagram Follow করুন', link: 'https://www.instagram.com/shakibexplainer', reward: 5, duration: 25, icon: 'fa-brands fa-instagram' }
+            ],
+            welcomeNotice: {
+                title: "Welcome!",
+                message: "Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আমাদের প্ল্যাটফর্মে প্রতিদিন বিজ্ঞাপন দেখে আয় করুন।\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি বিজ্ঞাপনে আয় ৫ টাকা\nপ্রতি যোগ্য রেফারে (১০টি অ্যাড দেখলে) ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।"
+            }
+        };
+
+        // --- MAIN APP LOGIC ---
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
+        const dbName = 'AdBotAppDB'; let db;
+        let firebaseApp, firebaseDb;
+        let vipCountdownInterval;
+        let selectedPackage = null;
+
+        const allDOMElements = { 
+            preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
+            container: document.querySelector('.container'), totalEarningEl: document.getElementById('total-earning'), adCountEl: document.getElementById('ad-count'), 
+            adsTodayCountEl: document.getElementById('ads-today-count'), referralCountEl: document.getElementById('referral-count'), watchAdButton: document.getElementById('watch-ad-button'), 
+            withdrawForm: document.getElementById('withdraw-form'), adLoaderOverlay: document.getElementById('ad-loader-overlay'), profilePicEl: document.getElementById('profile-pic'), 
+            greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), 
+            copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
+            bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
+        };
+        
+        function calculateDaysLeft(expiryDate) {
+            // Fixed calculation to avoid timezone/DST issues by normalizing to midnight UTC
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0);
+            const exp = new Date(expiryDate);
+            exp.setUTCHours(0, 0, 0, 0);
+            const diffTime = exp.getTime() - today.getTime();
+            if (diffTime <= 0) return 0;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+        
+        function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
+        function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+
+        // Function to sync user data to Firebase
+        async function syncUserToFirebase(userId, userData) {
+            if (!firebaseDb || !userId) return;
+            try {
+                await firebaseDb.ref(`users/${userId}`).update({
+                    ...userData,
+                    totalEarning: state.totalEarning,
+                    adCount: state.adCount,
+                    referralCount: state.referralCount,
+                    referralBalance: state.referralBalance,
+                    joinDate: state.joinDate || new Date().toISOString(), // Ensure joinDate is set
+                    name: tg ? tg.initDataUnsafe.user.first_name : 'Unknown',
+                    username: tg ? tg.initDataUnsafe.user.username : null,
+                    banned: false // Default not banned
+                });
+            } catch (e) {
+                console.error("Firebase sync error:", e);
+            }
+        }
+
+        function safeTgAction(action, fallback = () => {}) { if (tg && tg.initData) { action(tg); } else { fallback(); console.log("Telegram WebApp is not available or not ready."); } }
+        function safeTgAlert(message) { safeTgAction(tg => tg.showAlert(message), () => alert(message)); }
+        function escapeHTML(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        function populateWithdrawalMethods() {
+            const container = document.getElementById('payment-methods-container');
+            if (!container) return;
+            container.innerHTML = '';
+            config.withdrawalMethods.forEach(method => {
+                const label = document.createElement('label');
+                label.className = 'payment-method-option';
+                const imgSrc = method === 'Bkash' ? 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/ae7a61c76f251a0a2d3ba80b7c98a8342c2991b3/20251104_125237.png' : 'https://raw.githubusercontent.com/shakib0122222/Taka-kamao/ae7a61c76f251a0a2d3ba80b7c98a8342c2991b3/20251104_125257.png';
+                const alt = method;
+                label.innerHTML = `
+                    <input type="radio" name="method" value="${method}" required>
+                    <div class="method-content">
+                        <img src="${imgSrc}" alt="${alt}" class="method-logo">
+                        <span class="method-name">${method}</span>
+                    </div>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        let cooldownInterval;
+        function updateUI() {
+            allDOMElements.referralCountEl.textContent = state.referralCount;
+            allDOMElements.referralBalanceText.textContent = `৳${state.referralBalance.toFixed(2)}`;
+            allDOMElements.minWithdrawText.textContent = `Minimum withdrawal is ৳${config.MINIMUM_WITHDRAWAL}.`;
+            allDOMElements.referralRequirementNote.innerHTML = `<strong>নোট:</strong> You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} qualified referrals to withdraw. Current: <strong>${state.referralCount}</strong>`;
+            if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
+            allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
+            allDOMElements.adCountEl.textContent = state.adCount;
+
+            // Sync to Firebase after UI update
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (userId) {
+                syncUserToFirebase(userId, { adCount: state.adCount, referralCount: state.referralCount, referralBalance: state.referralBalance });
+            }
+
+            // VIP Expiry Check & Countdown
+            if (state.isVIP && state.vipExpiry) {
+                const expiryDate = new Date(state.vipExpiry);
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft <= 0) {
+                    state.isVIP = false;
+                    state.vipPackage = null;
+                    state.vipExpiry = null;
+                    state.vipDaysLeft = 0;
+                    saveState();
+                    safeTgAlert('Your VIP membership has expired. Upgrade again to continue enjoying benefits!');
+                } else {
+                    state.vipDaysLeft = daysLeft;
+                    const vipStatusEl = allDOMElements.greetingEl.querySelector('.vip-status');
+                    if (vipStatusEl) {
+                        vipStatusEl.innerHTML = `<i class="fa-solid fa-crown"></i> ${state.vipPackage.name} (${daysLeft} days left)`;
+                    }
+                }
+            }
+
+            const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+            allDOMElements.adsTodayCountEl.textContent = `${state.adsWatchedToday} / ${dailyLimit}`;
+            
+            clearInterval(cooldownInterval);
+            const watchAdButton = allDOMElements.watchAdButton;
+            if (!state.isVIP && state.cooldownUntil && new Date() < new Date(state.cooldownUntil)) {
+                watchAdButton.disabled = true;
+                const updateTimer = () => {
+                    const remainingMs = new Date(state.cooldownUntil) - new Date();
+                    if (remainingMs <= 0) { clearInterval(cooldownInterval); state.cooldownUntil = null; saveState(); updateUI(); safeTgAlert(`Your break is over!`); } 
+                    else { 
+                        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                        watchAdButton.querySelector('span').textContent = `Break: ${hours}h ${minutes}m ${seconds}s`; 
+                    }
+                };
+                cooldownInterval = setInterval(updateTimer, 1000); updateTimer();
+            } else {
+                const limitReached = state.adsWatchedToday >= dailyLimit;
+                watchAdButton.disabled = limitReached;
+                watchAdButton.querySelector('span').textContent = limitReached ? (state.isVIP ? 'VIP Limit Reached' : 'Take a Break') : 'Watch Ad';
+            }
+            watchAdButton.classList.toggle('pulsing', !watchAdButton.disabled);
+
+            // No VIP King Badge
+
+            updateChart();
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('activityChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const fontColor = isDark ? '#F5F5F7' : '#1D1D1F';
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(context, { 
+                type: 'bar', 
+                data: { 
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 
+                    datasets: [{ 
+                        label: 'Ads Watched', 
+                        data: state.weeklyActivity, 
+                        backgroundColor: 'rgba(var(--primary-color-rgb), 0.2)', 
+                        borderColor: 'rgb(var(--primary-color-rgb))', 
+                        borderWidth: 2, 
+                        borderRadius: 8, 
+                        hoverBackgroundColor: 'rgba(var(--primary-color-rgb), 0.4)' 
+                    }] 
+                }, 
+                options: { 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 5, color: fontColor }, grid: { color: gridColor } }, 
+                        x: { ticks: { color: fontColor }, grid: { color: gridColor } } } , 
+                    plugins: { legend: { display: false } }, 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                } 
+            });
+        }
+
+        // Function to create/sync initial user profile
+        async function createUserProfile(userId, user) {
+            if (!firebaseDb || !userId) return;
+            try {
+                const userRef = firebaseDb.ref(`users/${userId}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        name: user.first_name || 'Unknown',
+                        username: user.username || null,
+                        joinDate: new Date().toISOString(),
+                        totalEarning: 0.0,
+                        adCount: 0,
+                        referralCount: 0,
+                        referralBalance: 0.0,
+                        banned: false
+                    });
+                    state.joinDate = new Date().toISOString(); // Set local state
+                    saveState();
+                }
+            } catch (e) {
+                console.error("User profile creation error:", e);
+            }
+        }
+        
+        async function watchAd() {
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (!userId) return;
+            const dailyLimit = state.isVIP ? state.vipPackage.dailyAds : config.DAILY_AD_LIMIT;
+            if (state.adsWatchedToday >= dailyLimit) {
+                safeTgAlert(state.isVIP ? 'VIP daily limit reached!' : 'Daily limit reached!');
+                return;
+            }
+            allDOMElements.adLoaderOverlay.style.display = 'flex';
+            const previousAdCount = state.adCount;
+            const adFunction = window[`show_${config.MONETAG_ZONE_ID}`];
+            if (typeof adFunction !== 'function') { safeTgAlert('Ad failed to load. Please try again.'); allDOMElements.adLoaderOverlay.style.display = 'none'; return; }
+            adFunction().then(async () => {
+                state.totalEarning += config.AD_REWARD; state.adCount++; state.adsWatchedToday++; state.weeklyActivity[new Date().getDay()]++;
+                
+                // Sync adCount to Firebase
+                await firebaseDb.ref(`users/${userId}/adCount`).set(state.adCount);
+                
+                // Sync totalEarning
+                await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                
+                // Check for referral reward trigger
+                if (previousAdCount === 9 && state.referred_by) {
+                    const referrerId = state.referred_by;
+                    const referrerQualifiedRef = firebaseDb.ref(`users/${referrerId}/qualifiedReferrals`);
+                    await referrerQualifiedRef.transaction(curr => (curr || 0) + 1);
+                    
+                    // Notify referrer
+                    const user = tg.initDataUnsafe.user;
+                    const message = `🎉 Great news! Your referral ${escapeHTML(user.first_name || 'User')} has completed 10 ads. You've earned ৳50! Check your app.`;
+                    await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: referrerId, text: message })
+                    }).catch(console.error);
+                }
+                
+                let alertMessage = `Ad watched! ${dailyLimit - state.adsWatchedToday} ads left.`;
+                if (state.adsWatchedToday >= dailyLimit) {
+                    alertMessage = state.isVIP ? `VIP daily limit reached! Check back tomorrow for more.` : `Tasks completed! 24-hour break.`;
+                    if (!state.isVIP) {
+                        const cdDate = new Date();
+                        cdDate.setMinutes(cdDate.getMinutes() + config.COOLDOWN_MINUTES);
+                        state.cooldownUntil = cdDate.toISOString();
+                    }
+                }
+                saveState(); updateUI();
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                safeTgAlert(alertMessage);
+            }).catch(e => { console.error("Monetag Ad Error:", e); safeTgAlert('Ad could not be completed. Please try again.'); })
+            .finally(() => { allDOMElements.adLoaderOverlay.style.display = 'none'; });
+        }
+        
+        async function handleWithdrawal(event) {
+            event.preventDefault();
+            if (state.referralCount < config.MIN_REFERRALS_FOR_WITHDRAW) {
+                safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} qualified referrals to withdraw. Current: ${state.referralCount}`);
+                return;
+            }
+            const { withdrawForm } = allDOMElements;
+            const submitButton = document.getElementById('withdraw-submit-button');
+            const buttonText = submitButton.querySelector('.button-text');
+            const spinner = submitButton.querySelector('.spinner');
+            const selectedMethodInput = withdrawForm.querySelector('input[name="method"]:checked');
+            const method = selectedMethodInput ? selectedMethodInput.value : null;
+            if (!method) {
+                safeTgAlert('Please select a payment method.');
+                return;
+            }
+            const amount = parseFloat(withdrawForm.elements['withdraw-amount'].value);
+            const accountNumber = withdrawForm.elements['account-number'].value;
+            
+            if (state.totalEarning < config.MIN_AD_EARNING_FOR_WITHDRAW) {
+                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন।');
+                return;
+            }
+            
+            if (amount > state.totalEarning) return safeTgAlert('You do not have enough balance.');
+            if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
+
+            buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
+            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
+            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> ৳${amount.toFixed(2)}`;
+            try {
+                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
+                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
+                const results = await Promise.all(promises);
+                if (results.some(r => r.ok)) {
+                    state.totalEarning -= amount;
+                    const pendingUntil = new Date().getTime() + (2 * 60 * 60 * 1000);
+                    state.withdrawalHistory.unshift({ method, number: accountNumber, amount, date: new Date().toISOString(), status: 'Pending', pendingUntil });
+                    saveState(); updateUI(); closeModal('withdrawModal'); withdrawForm.reset();
+                    safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed within 2 hours.');
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                } else { throw new Error(JSON.stringify(results)); }
+            } catch (error) { console.error("Withdrawal Error:", error); safeTgAlert('Failed to send your request. Please try again later.'); } 
+            finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
+        }
+        
+        function checkPendingWithdrawals() {
+            let changed = false;
+            state.withdrawalHistory.forEach(item => {
+                if (item.status === 'Pending' && new Date().getTime() > item.pendingUntil) {
+                    item.status = 'Success';
+                    changed = true;
+                }
+            });
+            if (changed) {
+                saveState();
+                if (document.getElementById('historyModal').style.display === 'flex') {
+                    renderHistory();
+                }
+            }
+        }
+        
+        function renderHistory() {
+            checkPendingWithdrawals();
+            const { historyListEl } = allDOMElements;
+            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; return; }
+            historyListEl.innerHTML = state.withdrawalHistory.map(item => `
+                <div class="history-item">
+                    <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
+                    <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
+                </div>`).join('');
+        }
+
+        function renderVIPOption() {
+            const bonusTasksListEl = allDOMElements.bonusTasksListEl;
+            const vipItem = document.createElement('div');
+            vipItem.className = 'bonus-item vip-item';
+            const statusText = state.isVIP ? 'Active' : (state.vipRequested ? 'Pending' : 'Buy Now');
+            vipItem.innerHTML = `
+                <div class="bonus-header">
+                    <img src="https://raw.githubusercontent.com/shakib0122222/Taka-kamao/10167fd6277ff23e6fe821b9b9e1e36a8744b35e/vip%20(1).gif" alt="VIP" class="icon">
+                    <div class="details">
+                        <h4 class="title">VIP Membership</h4>
+                        <p class="reward"><i class="fa-solid fa-crown"></i> Unlock More Ads & Earnings!</p>
+                    </div>
+                </div>
+                <button class="claim-button" onclick="openVIPModal()" ${state.isVIP ? 'disabled' : ''}>
+                    ${statusText}
+                </button>
+            `;
+            bonusTasksListEl.insertBefore(vipItem, bonusTasksListEl.firstChild);
+        }
+
+        function renderBonusTasks() {
+            const { bonusTasksListEl } = allDOMElements;
+            bonusTasksListEl.innerHTML = '';
+            renderVIPOption();
+            config.bonusTasks.forEach(task => {
+                const isCompleted = state.completedBonusTasks.includes(task.id);
+                const item = document.createElement('div');
+                item.className = 'bonus-item';
+                let iconColor = 'var(--primary-color)';
+                if (task.icon.includes('youtube')) iconColor = '#FF0000';
+                else if (task.icon.includes('facebook')) iconColor = '#1877F2';
+                else if (task.icon.includes('instagram')) iconColor = '#E4405F';
+                item.innerHTML = `
+                    <div class="bonus-header">
+                        <i class="${task.icon} icon" style="color: ${iconColor};"></i>
+                        <div class="details">
+                            <h4 class="title">${escapeHTML(task.title)}</h4>
+                            <p class="reward"><i class="fa-solid fa-gift"></i> + ৳${task.reward.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <button class="claim-button" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Completed' : 'Claim Now'}</button>
+                `;
+                if (!isCompleted) { item.querySelector('.claim-button').addEventListener('click', (e) => handleBonusTask(task, e.target)); }
+                bonusTasksListEl.appendChild(item);
+            });
+        }
+
+        async function handleBonusTask(task, button) {
+            safeTgAlert('Please join/subscribe to the group/channel and return to claim the bonus. You will be redirected...');
+            button.disabled = true; button.textContent = 'Waiting for Verification...';
+            safeTgAction(tg => tg.openLink(task.link));
+            setTimeout(async () => {
+                if (state.completedBonusTasks.includes(task.id)) return;
+                safeTgAlert('Verification complete! Bonus claimed.');
+                state.totalEarning += task.reward;
+                state.completedBonusTasks.push(task.id);
+                saveState(); updateUI();
+
+                // Sync updated totalEarning to Firebase
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) {
+                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                }
+
+                button.textContent = 'Completed ✓';
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+            }, task.duration * 1000);
+        }
+
+        function openVIPModal() {
+            const modal = document.getElementById('vipModal');
+            modal.style.display = 'flex';
+            const container = document.getElementById('vip-packages');
+            const guide = document.getElementById('payment-guide');
+            container.innerHTML = '';
+            guide.style.display = 'none';
+            selectedPackage = null;
+
+            if (state.isVIP && state.vipExpiry) {
+                const expiryDate = new Date(state.vipExpiry);
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft > 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--vip-gold);">
+                        <i class="fa-solid fa-crown" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <h3>You are a VIP ${state.vipPackage.name} Member!</h3>
+                        <p style="font-size: 16px;">Expires: ${new Date(state.vipExpiry).toLocaleDateString()}</p>
+                        <p style="font-size: 14px; color: var(--text-light);">Enjoy ${state.vipPackage.dailyAds} ads/day for ${daysLeft} days left!</p>
+                    </div>`;
+                    return;
+                }
+            }
+
+            if (state.vipRequested) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: orange;">
+                    <i class="fa-solid fa-clock" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <h3>VIP Request Pending</h3>
+                    <p style="font-size: 14px; color: var(--text-light);">Admin will approve soon. TxID: ${state.vipRequestTxId}</p>
+                </div>`;
+                return;
+            }
+
+            // Render VIP List - Scrollable
+            config.VIP_PACKAGES.forEach(pkg => {
+                const div = document.createElement('div');
+                div.className = `vip-package ${selectedPackage === pkg ? 'selected' : ''}`;
+                div.onclick = () => {
+                    selectedPackage = pkg;
+                    document.querySelectorAll('.vip-package').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    guide.style.display = 'block';
+                    // Update payment instruction with selected package amount
+                    document.getElementById('selected-amount').textContent = pkg.price;
+                    document.getElementById('vip-request-btn').onclick = () => sendVIPRequest(pkg);
+                };
+                div.innerHTML = `
+                    <div style="flex: 1; text-align: left;">
+                        <h4 style="margin: 0; font-weight: 700; color: var(--text-color);">${pkg.name}</h4>
+                        <p style="margin: 5px 0; color: var(--text-light);">
+                            <i class="fa-solid fa-play"></i> ${pkg.dailyAds} Ads/Day • <i class="fa-solid fa-calendar"></i> ${pkg.validityDays} Days
+                        </p>
+                    </div>
+                    <div style="text-align: right; font-weight: 800; font-size: 24px; color: var(--vip-gold);">৳${pkg.price}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function copyPaymentNumber() {
+            navigator.clipboard.writeText(config.PAYMENT_NUMBER).then(() => safeTgAlert('Number copied!'));
+        }
+
+        async function sendVIPRequest(pkg) {
+            const txid = document.getElementById('txid-input').value.trim();
+            if (!txid) return safeTgAlert('Please enter Transaction ID');
+            if (!selectedPackage) return safeTgAlert('Please select a package');
+
+            const btn = document.getElementById('vip-request-btn');
+            const text = btn.querySelector('span');
+            const spinner = btn.querySelector('.spinner');
+            text.style.display = 'none'; spinner.style.display = 'block'; btn.disabled = true;
+
+            try {
+                const user = tg.initDataUnsafe.user;
+                await firebaseDb.ref(`vip_requests/${user.id}`).set({
+                    userId: user.id,
+                    username: user.username || 'N/A',
+                    name: `${user.first_name} ${user.last_name || ''}`,
+                    packageId: pkg.id,
+                    price: pkg.price,
+                    txid: txid,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending'
+                });
+
+                state.vipRequested = true;
+                state.vipRequestTxId = txid;
+                saveState();
+                safeTgAlert('VIP Request Sent! Wait for admin approval.');
+                closeModal('vipModal');
+
+                // Re-render bonus tasks if the modal is open to update "Buy Now" to "Pending"
+                if (document.getElementById('bonusTasksModal').style.display === 'flex') {
+                    renderBonusTasks();
+                }
+            } catch (e) {
+                safeTgAlert('Failed. Try again.');
+            } finally {
+                text.style.display = 'inline'; spinner.style.display = 'none'; btn.disabled = false;
+            }
+        }
+
+        function showModal(modalId, buttonEl) {
+            document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active'));
+            if (buttonEl) buttonEl.classList.add('active');
+            if (modalId === 'historyModal') renderHistory();
+            if (modalId === 'bonusTasksModal') renderBonusTasks();
+            if (modalId === 'inviteModal') updateUI();
+            if (modalId === 'withdrawModal') { populateWithdrawalMethods(); updateUI(); }
+            const modal = document.getElementById(modalId);
+            if(modal) modal.style.display = 'flex';
+        }
+        function closeModal(modalId) { 
+            const modal = document.getElementById(modalId); 
+            if(modal) modal.style.display = 'none'; 
+            if (modalId !== 'welcomeModal') { document.querySelectorAll('.nav-button.active').forEach(btn => btn.classList.remove('active')); } 
+        }
+        function getReferralLink() { const userId = tg ? tg.initDataUnsafe?.user?.id : 'testuser'; return `https://t.me/${config.BOT_USERNAME}?startapp=${userId}`; }
+        function copyReferralLink() { navigator.clipboard.writeText(getReferralLink()).then(() => safeTgAlert('Referral link copied!')).catch(() => safeTgAlert('Could not copy link.')); }
+        function shareReferralLink() { 
+            const link = getReferralLink();
+            const text = `🍅💸 Tomato ইনকাম বট 💸🍅\nআমি প্রতিদিন Tomato বট থেকে ইনকাম করছি! 😎\nতুমিও চাইলে আজই শুরু করতে পারো 💰\n👇 এখানে জয়েন করো 👇\n🔗 ${link}`; 
+            safeTgAction(tg => tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)); 
+        }
+
+        async function addToMainBalance() {
+            if (state.referralBalance >= config.REFERRAL_MIN_ADD) {
+                const addedAmount = state.referralBalance;
+                state.totalEarning += state.referralBalance;
+                state.referralBalance = 0;
+                saveState();
+                updateUI();
+
+                // Sync updated balances to Firebase
+                const userId = tg ? tg.initDataUnsafe.user.id : null;
+                if (userId) {
+                    await firebaseDb.ref(`users/${userId}`).update({
+                        totalEarning: state.totalEarning,
+                        referralBalance: state.referralBalance
+                    });
+                }
+
+                safeTgAlert(`Referral balance of ৳${addedAmount.toFixed(2)} added to main balance!`);
+                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+            } else {
+                safeTgAlert(`Minimum ৳${config.REFERRAL_MIN_ADD} required to add to main balance. Current: ৳${state.referralBalance.toFixed(2)}`);
+            }
+        }
+
+        // Support Links Functions
+        function openSupportLink() { safeTgAction(tg => tg.openLink(config.ADMIN_SUPPORT_LINK)); }
+        function openTutorialLink() { safeTgAction(tg => tg.openLink(config.TUTORIAL_LINK)); }
+        function openGroupLink() { safeTgAction(tg => tg.openTelegramLink(config.GROUP_LINK)); }
+        function openPaymentProofLink() { safeTgAction(tg => tg.openTelegramLink(config.PAYMENT_PROOF_LINK)); }
+        
+        function initFirebase() { try { firebase.initializeApp(config.firebase); firebaseDb = firebase.database(); } catch (e) { console.error("Firebase initialization failed:", e); } }
+
+        async function handleReferral() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const startParam = tg.initDataUnsafe.start_param;
+            const currentUser = tg.initDataUnsafe.user;
+            if (!startParam || isNaN(parseInt(startParam)) || parseInt(startParam) === currentUser.id) return;
+            
+            const referrerId = parseInt(startParam);
+            const referredUserRef = firebaseDb.ref(`users/${currentUser.id}/referred_by`);
+            const snapshot = await referredUserRef.once('value');
+            if (snapshot.exists()) return;
+
+            await referredUserRef.set(referrerId);
+            const referrerRef = firebaseDb.ref(`users/${referrerId}/referrals`);
+            await referrerRef.transaction((currentCount) => (currentCount || 0) + 1);
+
+            const message = `🎉 Congratulations! User ${currentUser.first_name} (@${currentUser.username}) joined using your link. You will receive your bonus if they watch 10 ads.`;
+            await fetch(`https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: referrerId, text: message }) });
+        }
+
+        async function processQualifiedRewards() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            const qualifiedReferralsRef = firebaseDb.ref(`users/${userId}/qualifiedReferrals`);
+            const snapshot = await qualifiedReferralsRef.once('value');
+            const totalQualified = snapshot.val() || 0;
+
+            const rewarded = state.rewardedQualifiedReferrals || 0;
+            const newQualified = totalQualified - rewarded;
+
+            if (newQualified > 0) {
+                const bonus = newQualified * config.REFERRAL_REWARD;
+                state.referralBalance += bonus;
+                state.rewardedQualifiedReferrals = totalQualified;
+                state.referralCount = totalQualified;
+                saveState();
+                updateUI();
+
+                // Sync referral balance
+                await firebaseDb.ref(`users/${userId}/referralBalance`).set(state.referralBalance);
+                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
+
+                safeTgAlert(`You received a bonus of ৳${bonus.toFixed(2)} for ${newQualified} qualified referral(s)! (Each watched 10 ads)`);
+            } else {
+                state.referralCount = totalQualified;
+                await firebaseDb.ref(`users/${userId}/referralCount`).set(state.referralCount);
+            }
+        }
+
+        async function listenForQualifiedReferrals() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            const qualifiedReferralsRef = firebaseDb.ref(`users/${userId}/qualifiedReferrals`);
+            qualifiedReferralsRef.on('value', async (snapshot) => { 
+                const count = snapshot.val() || 0;
+                state.referralCount = count;
+                await processQualifiedRewards();
+            });
+        }
+
+        async function listenForVIPStatus() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            firebaseDb.ref(`vip_users/${userId}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.active) {
+                    const expiryDate = new Date(data.expiry);
+                    const daysLeft = calculateDaysLeft(expiryDate);
+                    if (daysLeft > 0) {
+                        const pkg = config.VIP_PACKAGES.find(p => p.id === data.packageId);
+                        state.isVIP = true;
+                        state.vipPackage = pkg;
+                        state.vipExpiry = data.expiry;
+                        state.vipDaysLeft = daysLeft;
+                        state.vipRequested = false; // Reset pending status on approval
+                        state.vipRequestTxId = null;
+                        saveState();
+                        updateUI();
+                        const welcomeMsg = `স্বাগতম, ${pkg.name} VIP! 🎉\n\nআপনি এখন ${pkg.dailyAds} অ্যাড দেখে আরও বেশি আয় করতে পারবেন।\nবাকি ${daysLeft} দিন।`;
+                        safeTgAlert(welcomeMsg);
+
+                        // Re-render bonus tasks if open to update to "Active"
+                        if (document.getElementById('bonusTasksModal').style.display === 'flex') {
+                            renderBonusTasks();
+                        }
+                    } else {
+                        // Auto deactivate if expired
+                        firebaseDb.ref(`vip_users/${userId}`).update({ active: false });
+                    }
+                } else {
+                    state.isVIP = false;
+                    state.vipPackage = null;
+                    state.vipExpiry = null;
+                    state.vipDaysLeft = 0;
+                    state.vipRequested = false;
+                    state.vipRequestTxId = null;
+                    saveState();
+                    updateUI();
+
+                    // Re-render bonus tasks if open to update status
+                    if (document.getElementById('bonusTasksModal').style.display === 'flex') {
+                        renderBonusTasks();
+                    }
+                }
+            });
+        }
+
+        // Listener for admin-added balance
+        function listenForAdminBalance() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            const balanceRef = firebaseDb.ref(`users/${userId}/balance`);
+            balanceRef.on('value', async (snapshot) => {
+                const adjustment = snapshot.val() || 0;
+                if (adjustment !== 0) {
+                    state.totalEarning += adjustment;
+                    // Update Firebase totalEarning
+                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                    // Set balance to 0
+                    await balanceRef.set(0);
+                    // Update UI
+                    updateUI();
+                    const message = adjustment > 0 ? `Admin added ৳${adjustment.toFixed(2)}` : `Admin deducted ৳${Math.abs(adjustment).toFixed(2)}`;
+                    safeTgAlert(message + ' to your balance!');
+                    // Haptic if positive
+                    if (adjustment > 0) safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                    saveState();
+                }
+            });
+        }
+
+        function loadMonetagSDK() {
+            const script = document.createElement('script');
+            script.src = `//libtl.com/sdk.js`;
+            script.setAttribute('data-zone', config.MONETAG_ZONE_ID);
+            script.setAttribute('data-sdk', `show_${config.MONETAG_ZONE_ID}`);
+            script.async = true;
+            document.body.appendChild(script);
+        }
+
+        function generateWelcomeMessage() {
+            let message = config.welcomeNotice.message;
+            if (state.isVIP && state.vipPackage && state.vipExpiry) {
+                const expiryDate = new Date(state.vipExpiry);
+                const daysLeft = calculateDaysLeft(expiryDate);
+                if (daysLeft > 0) {
+                    const pkg = state.vipPackage;
+                    const dailyAds = pkg.dailyAds;
+                    const rewardPerAd = config.AD_REWARD;
+                    const potentialDailyEarning = dailyAds * rewardPerAd;
+                    message = `Tomato_🍅_টমেটো এ আপনাকে স্বাগতম! আসসালামু আলাইকুম। আপনি ${pkg.name} VIP সদস্য! 🎉\n\nVIP বিস্তারিত:\n• প্রতিদিন ${dailyAds} টি অ্যাড দেখুন\n• প্রতি অ্যাডে ${rewardPerAd} টাকা আয়\n• সম্ভাব্য দৈনিক আয়: ${potentialDailyEarning} টাকা\n• বাকি: ${daysLeft} দিন\n\nজয়েন বোনাস ৫০ টাকা\nপ্রতি যোগ্য রেফারে (১০টি অ্যাড দেখলে) ৫০ টাকা বোনাস\nসর্বনিম্ন উত্তোলন: ৫০০৳, বিকাশ/নগদে\nউত্তোলনের জন্য ন্যূনতম ১৫ টি রেফার প্রয়োজন।`;
+                }
+            }
+            return message;
+        }
+
+        async function initApp() {
+            let appReady = false;
+            let preloaderAnimationDone = false;
+            
+            const tryFinishLoading = () => {
+                if(appReady && preloaderAnimationDone) {
+                    allDOMElements.preloader.style.opacity = '0';
+                    allDOMElements.preloaderFooter.style.opacity = '0';
+                    setTimeout(() => {
+                        allDOMElements.preloader.style.display = 'none';
+                        allDOMElements.preloaderFooter.style.display = 'none';
+                        allDOMElements.container.style.display = 'block';
+                    }, 500);
+                }
+            };
+
+            let percentage = 0;
+            const interval = setInterval(() => {
+                percentage += Math.floor(Math.random() * 5) + 1;
+                if (percentage > 100) percentage = 100;
+                allDOMElements.preloaderPercentage.textContent = `${percentage}%`;
+                if (percentage >= 100) {
+                    clearInterval(interval);
+                    preloaderAnimationDone = true;
+                    tryFinishLoading();
+                }
+            }, 60);
+
+            try {
+                loadMonetagSDK(); 
+                initFirebase();
+               
+                populateWithdrawalMethods();
+
+                allDOMElements.welcomeTitle.textContent = config.welcomeNotice.title;
+                allDOMElements.welcomeMessage.textContent = generateWelcomeMessage();
+
+                await initDB(); 
+                await loadState();
+
+                const currentUserId = tg ? tg.initDataUnsafe?.user?.id : null;
+                if (currentUserId) {
+                    if (!state.originalUserId) {
+                        state.originalUserId = currentUserId;
+                        await saveState();
+                    } else if (state.originalUserId !== currentUserId) {
+                        document.getElementById('multiAccountModal').style.display = 'flex';
+                        return;
+                    }
+
+                    // Create user profile if not exists
+                    const user = tg.initDataUnsafe.user;
+                    await createUserProfile(currentUserId, user);
+
+                    // Load referred_by
+                    const referredByRef = firebaseDb.ref(`users/${currentUserId}/referred_by`);
+                    const referredSnap = await referredByRef.once('value');
+                    state.referred_by = referredSnap.val() || null;
+
+                    // Sync adCount from Firebase
+                    const adRef = firebaseDb.ref(`users/${currentUserId}/adCount`);
+                    const adSnap = await adRef.once('value');
+                    if (adSnap.exists()) {
+                        state.adCount = adSnap.val();
+                    }
+
+                    // Sync totalEarning from Firebase if exists
+                    const earningRef = firebaseDb.ref(`users/${currentUserId}/totalEarning`);
+                    const earningSnap = await earningRef.once('value');
+                    if (earningSnap.exists()) {
+                        state.totalEarning = earningSnap.val();
+                    }
+
+                    // Sync referralCount
+                    const referralRef = firebaseDb.ref(`users/${currentUserId}/referralCount`);
+                    const referralSnap = await referralRef.once('value');
+                    if (referralSnap.exists()) {
+                        state.referralCount = referralSnap.val();
+                    }
+
+                    // Sync referralBalance
+                    const refBalRef = firebaseDb.ref(`users/${currentUserId}/referralBalance`);
+                    const refBalSnap = await refBalRef.once('value');
+                    if (refBalSnap.exists()) {
+                        state.referralBalance = refBalSnap.val();
+                    }
+                }
+
+                const isNewUser = !(localStorage.getItem('userIdentified'));
+                localStorage.setItem('userIdentified', 'true');
+                
+                await handleReferral();
+                await processQualifiedRewards();
+                await listenForQualifiedReferrals();
+                await listenForVIPStatus();
+                listenForAdminBalance();
+                
+                setInterval(checkPendingWithdrawals, 60 * 1000);
+
+                const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
+                if (user?.first_name) {
+                    let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
+                    if (state.isVIP) {
+                        greetingText += `<div class="vip-status"><i class="fa-solid fa-crown"></i> VIP ${state.vipPackage.name} (${state.vipDaysLeft} days left)</div>`;
+                    }
+                    allDOMElements.greetingEl.innerHTML = greetingText;
+                    if (user.photo_url) { allDOMElements.profilePicEl.innerHTML = `<img src="${user.photo_url}" alt="P">`; }
+                    else { allDOMElements.profilePicEl.innerHTML = `<span>${escapeHTML(user.first_name.charAt(0))}</span>`; }
+                }
+                
+                updateUI();
+                
+                allDOMElements.watchAdButton.addEventListener('click', watchAd);
+                allDOMElements.withdrawForm.addEventListener('submit', handleWithdrawal);
+                allDOMElements.joinChannelButton.addEventListener('click', () => safeTgAction(tg => tg.openTelegramLink(config.TELEGRAM_CHANNEL_LINK)));
+                allDOMElements.copyLinkButton.addEventListener('click', copyReferralLink);
+                allDOMElements.shareLinkButton.addEventListener('click', shareReferralLink);
+                allDOMElements.addToMainBalance.addEventListener('click', addToMainBalance);
+                window.onclick = (event) => { if (event.target.classList.contains('modal')) closeModal(event.target.id); }
+
+                safeTgAction(tg => {
+                    tg.ready(); tg.expand();
+                    tg.onEvent('themeChanged', () => { document.documentElement.setAttribute('data-theme', tg.colorScheme); updateChart(); });
+                });
+
+                if (!sessionStorage.getItem('alreadyVisited')) { showModal('welcomeModal'); sessionStorage.setItem('alreadyVisited', 'true'); }
+            } catch (error) { console.error("Initialization failed:", error); } 
+            finally {
+                appReady = true;
+                if (percentage < 100) {
+                    clearInterval(interval);
+                    allDOMElements.preloaderPercentage.textContent = '100%';
+                    preloaderAnimationDone = true;
+                }
+                tryFinishLoading();
+                saveState();
+            }
+        }
+        
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>
