@@ -1381,18 +1381,18 @@
                     const userRef = db.child(`users/${userId}`);
                     const snapshot = await userRef.once('value');
                     const user = snapshot.val();
-                    const currentEarning = user.totalEarning || 0;
-                    if (parseFloat(amount) > currentEarning) {
-                        showNotification('Cannot deduct more than current earning.', 'error');
+                    const currentBalance = user.balance || 0;
+                    if (parseFloat(amount) > currentBalance) {
+                        showNotification('Cannot deduct more than current balance.', 'error');
                         return;
                     }
-                    const newEarning = currentEarning - parseFloat(amount);
-                    await userRef.update({ totalEarning: newEarning });
-                    showNotification(`Deducted ৳${parseFloat(amount).toFixed(2)} from earning. New earning: ৳${newEarning.toFixed(2)}`);
+                    const newBalance = currentBalance - parseFloat(amount);
+                    await userRef.update({ balance: newBalance });
+                    showNotification(`Deducted ৳${parseFloat(amount).toFixed(2)} from balance. New balance: ৳${newBalance.toFixed(2)}`);
                     loadUsers(); // Reload to update display
                 } catch (e) {
                     console.error(e);
-                    showNotification('Error deducting earning', 'error');
+                    showNotification('Error deducting balance', 'error');
                 }
             } else if (amount) {
                 showNotification('Invalid amount. Please enter a positive number.', 'error');
