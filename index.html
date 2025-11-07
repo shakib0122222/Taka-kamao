@@ -1375,52 +1375,26 @@
 
         // Deduct Balance from User
         async function deductBalance(userId) {
-            const amountStr = prompt('Enter amount to deduct from balance (BDT):');
-            if (amountStr && !isNaN(amountStr) && parseFloat(amountStr) > 0) {
-                const deductAmount = parseFloat(amountStr);
+            const amount = prompt('Enter amount to deduct from balance (BDT):');
+            if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
                 try {
                     const userRef = db.child(`users/${userId}`);
                     const snapshot = await userRef.once('value');
                     const user = snapshot.val();
-                    let currentRefer = user.referBalance ? parseFloat(user.referBalance) : 0;
-                    let currentBalance = user.balance ? parseFloat(user.balance) : 0;
-                    let remaining = deductAmount;
-
-                    // First, deduct from refer balance if available
-                    if (currentRefer > 0) {
-                        if (remaining >= currentRefer) {
-                            remaining -= currentRefer;
-                            await userRef.update({ referBalance: 0 });
-                        } else {
-                            const newRefer = currentRefer - remaining;
-                            await userRef.update({ referBalance: newRefer });
-                            remaining = 0;
-                        }
+                    const currentEarning = user.totalEarning || 0;
+                    if (parseFloat(amount) > currentEarning) {
+                        showNotification('Cannot deduct more than current earning.', 'error');
+                        return;
                     }
-
-                    // Then, deduct remaining from main balance
-                    if (remaining > 0) {
-                        if (remaining > currentBalance) {
-                            showNotification('Cannot deduct more than available balances.', 'error');
-                            return;
-                        }
-                        const newBalance = currentBalance - remaining;
-                        await userRef.update({ balance: newBalance });
-                    }
-
-                    // Reload current data for notification
-                    const updatedSnapshot = await userRef.once('value');
-                    const updatedUser = updatedSnapshot.val();
-                    const finalRefer = updatedUser.referBalance ? parseFloat(updatedUser.referBalance) : 0;
-                    const finalBalance = updatedUser.balance ? parseFloat(updatedUser.balance) : 0;
-
-                    showNotification(`Deducted ৳${deductAmount.toFixed(2)}. New refer balance: ৳${finalRefer.toFixed(2)}, New main balance: ৳${finalBalance.toFixed(2)}`);
+                    const newEarning = currentEarning - parseFloat(amount);
+                    await userRef.update({ totalEarning: newEarning });
+                    showNotification(`Deducted ৳${parseFloat(amount).toFixed(2)} from earning. New earning: ৳${newEarning.toFixed(2)}`);
                     loadUsers(); // Reload to update display
                 } catch (e) {
                     console.error(e);
-                    showNotification('Error deducting balance', 'error');
+                    showNotification('Error deducting earning', 'error');
                 }
-            } else if (amountStr) {
+            } else if (amount) {
                 showNotification('Invalid amount. Please enter a positive number.', 'error');
             }
         }
