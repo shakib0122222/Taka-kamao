@@ -242,7 +242,6 @@
         .history-status { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
         .history-status.success { color: #28a745; background-color: rgba(40, 167, 69, 0.1); }
         .history-status.pending { color: #fd7e14; background-color: rgba(253, 126, 20, 0.1); }
-        .history-status.rejected { color: #dc3545; background-color: rgba(220, 53, 69, 0.1); }
         .no-history { text-align: center; padding: 40px 20px; color: var(--text-light); }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -362,16 +361,6 @@
             box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
             animation: fadeIn 0.5s ease-out;
         }
-        .pending-withdraw-note {
-            background: rgba(253, 126, 20, 0.1);
-            border: 1px solid #fd7e14;
-            color: #fd7e14;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 15px 0;
-            text-align: center;
-            font-weight: 600;
-        }
 
         /* Withdraw Modal Payment Methods Styles */
         .payment-method-header {
@@ -482,7 +471,6 @@
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('withdrawModal')">&times;</span>
             <h3 class="card-title">Withdraw Funds</h3>
-            <div id="pending-withdraw-note" class="pending-withdraw-note" style="display: none;"></div>
             <p id="min-withdraw-text"></p>
             <div id="referral-requirement-note" class="withdraw-note highlight"></div>
             <form id="withdraw-form">
@@ -634,13 +622,11 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0, pendingWithdrawalId: null };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
         let selectedPackage = null;
-        let paymentHistoryListener = null;
-        let pendingWithdrawalListener = null;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
@@ -650,8 +636,7 @@
             greetingEl: document.getElementById('greeting'), joinChannelButton: document.getElementById('join-channel-button'), 
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
-            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance'),
-            pendingWithdrawNote: document.getElementById('pending-withdraw-note')
+            welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance')
         };
         
         function calculateDaysLeft(expiryDate) {
@@ -668,7 +653,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.pendingWithdrawalId) state.pendingWithdrawalId = null; if (!state.withdrawalHistory) state.withdrawalHistory = []; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.withdrawalHistory) state.withdrawalHistory = []; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         // Function to sync user data to Firebase
         async function syncUserToFirebase(userId, userData) {
@@ -829,8 +814,7 @@
                         referralCount: 0,
                         referralBalance: 0.0,
                         banned: false,
-                        deductBalance: 0,
-                        paymentHistory: [] // Initialize payment history
+                        deductBalance: 0
                     });
                     state.joinDate = new Date().toISOString(); // Set local state
                     saveState();
@@ -899,10 +883,6 @@
                 safeTgAlert(`You need at least ${config.MIN_REFERRALS_FOR_WITHDRAW} qualified referrals to withdraw. Current: ${state.referralCount}`);
                 return;
             }
-            if (state.pendingWithdrawalId) {
-                safeTgAlert('You already have a pending withdrawal request. Please wait for admin approval.');
-                return;
-            }
             const { withdrawForm } = allDOMElements;
             const submitButton = document.getElementById('withdraw-submit-button');
             const buttonText = submitButton.querySelector('.button-text');
@@ -925,124 +905,60 @@
             if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
 
             buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
-            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
+
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (!userId || !firebaseDb) {
+                safeTgAlert('Error: Unable to process request. Please try again.');
+                buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false;
+                return;
+            }
+
+            const user = tg.initDataUnsafe.user;
+            const requestId = firebaseDb.ref('payment_requests').push().key;
 
             try {
-                // Push to Firebase payment_requests
-                const requestsRef = firebaseDb.ref('payment_requests');
-                const newRequestRef = requestsRef.push();
-                const requestId = newRequestRef.key;
-                await newRequestRef.set({
+                await firebaseDb.ref(`payment_requests/${requestId}`).set({
                     userId: user.id,
                     name: `${user.first_name} ${user.last_name || ''}`,
                     username: user.username || 'N/A',
                     amount: amount,
                     method: method,
-                    accountNumber: accountNumber,
+                    txid: accountNumber,
                     timestamp: new Date().toISOString(),
                     status: 'pending'
                 });
 
-                // Store pending ID
-                state.pendingWithdrawalId = requestId;
-
-                // Add to local history
                 state.withdrawalHistory.unshift({
                     id: requestId,
-                    method,
+                    method: method,
                     number: accountNumber,
-                    amount,
+                    amount: amount,
                     date: new Date().toISOString(),
-                    status: 'pending'
+                    status: 'Pending'
                 });
 
                 saveState();
                 updateUI();
                 closeModal('withdrawModal');
                 withdrawForm.reset();
-
-                // Show pending note if modal reopens
-                allDOMElements.pendingWithdrawNote.style.display = 'block';
-                allDOMElements.pendingWithdrawNote.innerHTML = `Pending withdrawal request for ৳${amount.toFixed(2)} is being processed.`;
-
-                safeTgAlert('Your withdrawal request has been submitted. It will be reviewed by admin shortly.');
+                safeTgAlert('Your payment request has been submitted successfully! It will be reviewed by admin.');
                 safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
             } catch (error) {
-                console.error("Withdrawal Error:", error);
+                console.error("Withdrawal submission error:", error);
                 safeTgAlert('Failed to submit your request. Please try again later.');
             } finally {
                 buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false;
             }
         }
-
-        // Listen for payment request status changes
-        function listenForPendingWithdrawal() {
-            if (!state.pendingWithdrawalId || !firebaseDb) return;
-            const requestRef = firebaseDb.ref(`payment_requests/${state.pendingWithdrawalId}`);
-            pendingWithdrawalListener = requestRef.on('value', (snapshot) => {
-                const req = snapshot.val();
-                if (req) {
-                    const historyItem = state.withdrawalHistory.find(item => item.id === state.pendingWithdrawalId);
-                    if (historyItem) {
-                        historyItem.status = req.status;
-                        if (req.status === 'approved' || req.status === 'rejected') {
-                            // Clear pending ID on resolution
-                            state.pendingWithdrawalId = null;
-                            saveState();
-                            // Hide pending note
-                            allDOMElements.pendingWithdrawNote.style.display = 'none';
-                            safeTgAlert(req.status === 'approved' ? 'Your withdrawal has been approved and processed!' : 'Your withdrawal request has been rejected.');
-                        }
-                        if (document.getElementById('historyModal').style.display === 'flex') {
-                            renderHistory();
-                        }
-                    }
-                }
-            });
-        }
-
-        // Listen for payment history updates
-        function listenForPaymentHistory(userId) {
-            if (!userId || !firebaseDb) return;
-            const historyRef = firebaseDb.ref(`users/${userId}/paymentHistory`);
-            paymentHistoryListener = historyRef.on('child_added', (snapshot) => {
-                const histItem = snapshot.val();
-                state.withdrawalHistory.unshift({
-                    id: snapshot.key,
-                    ...histItem,
-                    date: histItem.timestamp
-                });
-                saveState();
-                if (document.getElementById('historyModal').style.display === 'flex') {
-                    renderHistory();
-                }
-            });
-        }
         
         function renderHistory() {
             const { historyListEl } = allDOMElements;
-            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { 
-                historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; 
-                return; 
-            }
-            historyListEl.innerHTML = state.withdrawalHistory.map(item => {
-                let statusClass = item.status.toLowerCase();
-                if (statusClass === 'approved') statusClass = 'success';
-                else if (statusClass === 'rejected') statusClass = 'rejected';
-                else statusClass = 'pending';
-                return `
-                    <div class="history-item">
-                        <div class="history-details">
-                            <span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number || item.accountNumber || 'N/A')}</span>
-                            <span class="date">${new Date(item.date).toLocaleString()}</span>
-                        </div>
-                        <div class="history-amount">
-                            <span>৳${item.amount.toFixed(2)}</span>
-                            <div class="history-status ${statusClass}">${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; return; }
+            historyListEl.innerHTML = state.withdrawalHistory.map(item => `
+                <div class="history-item">
+                    <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
+                    <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
+                </div>`).join('');
         }
 
         function renderVIPOption() {
@@ -1222,20 +1138,7 @@
             if (modalId === 'historyModal') renderHistory();
             if (modalId === 'bonusTasksModal') renderBonusTasks();
             if (modalId === 'inviteModal') updateUI();
-            if (modalId === 'withdrawModal') { 
-                populateWithdrawalMethods(); 
-                updateUI(); 
-                // Show pending note if exists
-                if (state.pendingWithdrawalId) {
-                    allDOMElements.pendingWithdrawNote.style.display = 'block';
-                    const pendingItem = state.withdrawalHistory.find(item => item.id === state.pendingWithdrawalId);
-                    if (pendingItem) {
-                        allDOMElements.pendingWithdrawNote.innerHTML = `Pending withdrawal for ৳${pendingItem.amount.toFixed(2)} (${pendingItem.method})`;
-                    }
-                } else {
-                    allDOMElements.pendingWithdrawNote.style.display = 'none';
-                }
-            }
+            if (modalId === 'withdrawModal') { populateWithdrawalMethods(); updateUI(); }
             const modal = document.getElementById(modalId);
             if(modal) modal.style.display = 'flex';
         }
@@ -1412,24 +1315,7 @@
             });
         }
 
-        // Listener for admin deduction from totalEarning
-        function listenForTotalEarningChange(userId) {
-            if (!userId || !firebaseDb) return;
-            const earningRef = firebaseDb.ref(`users/${userId}/totalEarning`);
-            earningRef.on('value', (snapshot) => {
-                const newEarning = snapshot.val() || 0;
-                if (newEarning < state.totalEarning) {
-                    const deducted = state.totalEarning - newEarning;
-                    safeTgAlert(`Admin deducted ৳${deducted.toFixed(2)} from your balance!`);
-                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('error'));
-                }
-                state.totalEarning = newEarning;
-                updateUI();
-                saveState();
-            });
-        }
-
-        // Listener for admin deduction (legacy, but keep for deductBalance if used)
+        // Listener for admin deduction
         function listenForAdminDeduction() {
             if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
             const userId = tg.initDataUnsafe.user.id;
@@ -1437,11 +1323,47 @@
             deductRef.on('value', async (snapshot) => {
                 const deduct = snapshot.val() || 0;
                 if (deduct > 0) {
-                    // This will trigger the totalEarning listener above
-                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning - deduct);
+                    state.totalEarning = Math.max(0, state.totalEarning - deduct);
+                    // Update Firebase totalEarning
+                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
                     // Set deductBalance to 0
                     await deductRef.set(0);
+                    // Update UI
+                    updateUI();
+                    safeTgAlert(`Admin deducted ৳${deduct.toFixed(2)} from your balance!`);
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('error'));
                     saveState();
+                }
+            });
+        }
+
+        // Listener for payment request status changes
+        function listenForPaymentStatus(userId) {
+            if (!firebaseDb || !userId) return;
+            firebaseDb.ref('payment_requests').orderByChild('userId').equalTo(userId).on('child_changed', async (snap) => {
+                const req = snap.val();
+                const requestId = snap.key;
+                let histIndex = state.withdrawalHistory.findIndex(h => h.id === requestId);
+                if (histIndex === -1) return;
+
+                const oldStatus = state.withdrawalHistory[histIndex].status;
+                const newStatus = req.status.charAt(0).toUpperCase() + req.status.slice(1);
+                state.withdrawalHistory[histIndex].status = newStatus;
+
+                if (req.status === 'approved' && oldStatus.toLowerCase() !== 'approved') {
+                    state.totalEarning -= req.amount;
+                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
+                    safeTgAlert(`Congratulations! Your withdrawal of ৳${req.amount} has been approved and processed.`);
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                } else if (req.status === 'rejected' && oldStatus.toLowerCase() !== 'rejected') {
+                    safeTgAlert('Your withdrawal request has been rejected. Please contact support.');
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('error'));
+                }
+
+                saveState();
+                updateUI();
+                if (document.getElementById('historyModal').style.display === 'flex') {
+                    renderHistory();
                 }
             });
         }
@@ -1558,18 +1480,30 @@
                         state.referralBalance = refBalSnap.val();
                     }
 
-                    // Load payment history from Firebase
-                    const historyRef = firebaseDb.ref(`users/${currentUserId}/paymentHistory`);
-                    const historySnap = await historyRef.once('value');
-                    if (historySnap.exists()) {
-                        const fbHistory = historySnap.val();
-                        state.withdrawalHistory = fbHistory.map(item => ({ ...item, date: item.timestamp }));
-                    }
+                    // Load withdrawal history from Firebase payment_requests
+                    firebaseDb.ref('payment_requests').orderByChild('userId').equalTo(currentUserId).once('value', (snap) => {
+                        state.withdrawalHistory = [];
+                        if (snap.exists()) {
+                            snap.forEach((child) => {
+                                const req = child.val();
+                                const status = req.status.charAt(0).toUpperCase() + req.status.slice(1);
+                                state.withdrawalHistory.push({
+                                    id: child.key,
+                                    method: req.method,
+                                    number: req.txid || 'N/A',
+                                    amount: req.amount,
+                                    date: req.timestamp,
+                                    status: status
+                                });
+                            });
+                            // Sort by date descending
+                            state.withdrawalHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        }
+                        saveState();
+                    });
 
-                    // Load pending withdrawal if any
-                    if (state.pendingWithdrawalId) {
-                        listenForPendingWithdrawal();
-                    }
+                    // Set up listener for payment status changes
+                    listenForPaymentStatus(currentUserId);
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
@@ -1581,11 +1515,7 @@
                 await listenForVIPStatus();
                 listenForAdminBalance();
                 listenForAdminDeduction();
-                listenForTotalEarningChange(currentUserId);
-                listenForPaymentHistory(currentUserId);
                 
-                setInterval(checkPendingWithdrawals, 60 * 1000);
-
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
                     let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
