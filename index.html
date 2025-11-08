@@ -597,11 +597,11 @@
             MONETAG_ZONE_ID: '10072766',
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
-            MINIMUM_WITHDRAWAL: 5,
-            MIN_REFERRALS_FOR_WITHDRAW: 0,
+            MINIMUM_WITHDRAWAL: 500,
+            MIN_REFERRALS_FOR_WITHDRAW: 10,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
-            MIN_AD_EARNING_FOR_WITHDRAW: 10,
+            MIN_AD_EARNING_FOR_WITHDRAW: 400,
             withdrawalMethods: ['Bkash', 'Nagad'],
             PAYMENT_NUMBER: '01925723245',
             firebase: {
@@ -915,7 +915,7 @@
             const accountNumber = withdrawForm.elements['account-number'].value;
             
             if (state.totalEarning < config.MIN_AD_EARNING_FOR_WITHDRAW) {
-                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৫০০ টাকা আয় করুন।');
+                safeTgAlert('আপনি শুধু রেফার করে withdraw করতে পারবেন না। Ads দেখে কমপক্ষে ৪০০ টাকা আয় করুন।');
                 return;
             }
             
