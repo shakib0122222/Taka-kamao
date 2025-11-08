@@ -242,6 +242,7 @@
         .history-status { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
         .history-status.success { color: #28a745; background-color: rgba(40, 167, 69, 0.1); }
         .history-status.pending { color: #fd7e14; background-color: rgba(253, 126, 20, 0.1); }
+        .history-status.rejected { color: #dc3545; background-color: rgba(220, 53, 69, 0.1); }
         .no-history { text-align: center; padding: 40px 20px; color: var(--text-light); }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -580,7 +581,7 @@
             AD_REWARD: 5,
             DAILY_AD_LIMIT: 10,
             MINIMUM_WITHDRAWAL: 500,
-            MIN_REFERRALS_FOR_WITHDRAW: 0,
+            MIN_REFERRALS_FOR_WITHDRAW: 10,
             COOLDOWN_MINUTES: 1440,
             REFERRAL_MIN_ADD: 100,
             MIN_AD_EARNING_FOR_WITHDRAW: 500,
@@ -653,7 +654,7 @@
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.withdrawalHistory) state.withdrawalHistory = []; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         // Function to sync user data to Firebase
         async function syncUserToFirebase(userId, userData) {
@@ -905,60 +906,89 @@
             if (isNaN(amount) || amount < config.MINIMUM_WITHDRAWAL) return safeTgAlert(`Minimum withdrawal amount is ৳${config.MINIMUM_WITHDRAWAL}.`);
 
             buttonText.style.display = 'none'; spinner.style.display = 'block'; submitButton.disabled = true;
-
-            const userId = tg ? tg.initDataUnsafe.user.id : null;
-            if (!userId || !firebaseDb) {
-                safeTgAlert('Error: Unable to process request. Please try again.');
-                buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false;
-                return;
-            }
-
-            const user = tg.initDataUnsafe.user;
-            const requestId = firebaseDb.ref('payment_requests').push().key;
-
+            const user = tg ? tg.initDataUnsafe?.user : { first_name: 'Test', last_name: 'User', username: 'testuser', id: '12345' };
+            const userId = user.id;
+            const requestId = Date.now().toString(); // Unique ID for request
+            const message = `<b>💰 New Withdrawal Request 💰</b>\n\n👤 <b>User:</b> ${escapeHTML(user?.first_name)} ${escapeHTML(user?.last_name)} (@${escapeHTML(user?.username) || 'N/A'})\n🆔 <b>User ID:</b> <code>${user?.id}</code>\n---------------------------------------\n💳 <b>Method:</b> ${escapeHTML(method)}\n🔢 <b>Account:</b> <code>${escapeHTML(accountNumber)}</code>\n💵 <b>Amount:</b> ৳${amount.toFixed(2)}`;
             try {
+                // Send to admins via Telegram
+                const url = `https://api.telegram.org/bot${config.BOT_TOKEN}/sendMessage`;
+                const promises = config.ADMIN_IDS.map(chat_id => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, text: message, parse_mode: 'HTML' }) }).then(res => res.json()));
+                const results = await Promise.all(promises);
+
+                // Save to Firebase payment_requests
                 await firebaseDb.ref(`payment_requests/${requestId}`).set({
-                    userId: user.id,
+                    userId: userId,
                     name: `${user.first_name} ${user.last_name || ''}`,
                     username: user.username || 'N/A',
-                    amount: amount,
                     method: method,
-                    txid: accountNumber,
+                    amount: amount,
+                    txid: accountNumber, // Using account number as txid for consistency
                     timestamp: new Date().toISOString(),
                     status: 'pending'
                 });
 
-                state.withdrawalHistory.unshift({
-                    id: requestId,
-                    method: method,
-                    number: accountNumber,
-                    amount: amount,
-                    date: new Date().toISOString(),
-                    status: 'Pending'
-                });
-
-                saveState();
-                updateUI();
-                closeModal('withdrawModal');
-                withdrawForm.reset();
-                safeTgAlert('Your payment request has been submitted successfully! It will be reviewed by admin.');
-                safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
-            } catch (error) {
-                console.error("Withdrawal submission error:", error);
-                safeTgAlert('Failed to submit your request. Please try again later.');
-            } finally {
-                buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false;
-            }
+                if (results.some(r => r.ok)) {
+                    // Add to local history for immediate display
+                    state.withdrawalHistory.unshift({ 
+                        id: requestId, 
+                        method, 
+                        number: accountNumber, 
+                        amount, 
+                        date: new Date().toISOString(), 
+                        status: 'Pending' 
+                    });
+                    saveState(); 
+                    updateUI(); 
+                    closeModal('withdrawModal'); 
+                    withdrawForm.reset();
+                    safeTgAlert('Your withdrawal request has been sent and is now pending. It will be processed by admin.');
+                    safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
+                } else { throw new Error(JSON.stringify(results)); }
+            } catch (error) { 
+                console.error("Withdrawal Error:", error); 
+                safeTgAlert('Failed to send your request. Please try again later.'); 
+            } 
+            finally { buttonText.style.display = 'inline'; spinner.style.display = 'none'; submitButton.disabled = false; }
         }
         
-        function renderHistory() {
-            const { historyListEl } = allDOMElements;
-            if (!state.withdrawalHistory || state.withdrawalHistory.length === 0) { historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>'; return; }
-            historyListEl.innerHTML = state.withdrawalHistory.map(item => `
-                <div class="history-item">
-                    <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
-                    <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
-                </div>`).join('');
+        function checkPendingWithdrawals() {
+            // This function is no longer needed as history is now Firebase-based
+        }
+        
+        async function renderHistory() {
+            const userId = tg ? tg.initDataUnsafe.user.id : null;
+            if (!userId || !firebaseDb) {
+                allDOMElements.historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>';
+                return;
+            }
+
+            try {
+                const snapshot = await firebaseDb.ref(`payment_requests`).orderByChild('userId').equalTo(userId).once('value');
+                const data = snapshot.val() || {};
+                const history = Object.entries(data).map(([requestId, item]) => ({
+                    id: requestId,
+                    method: item.method,
+                    number: item.txid,
+                    amount: item.amount,
+                    date: item.timestamp,
+                    status: item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                })).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (history.length === 0) {
+                    allDOMElements.historyListEl.innerHTML = '<p class="no-history">No withdrawal history found.</p>';
+                    return;
+                }
+
+                allDOMElements.historyListEl.innerHTML = history.map(item => `
+                    <div class="history-item">
+                        <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
+                        <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
+                    </div>`).join('');
+            } catch (e) {
+                console.error("Error loading history:", e);
+                allDOMElements.historyListEl.innerHTML = '<p class="no-history">Error loading history.</p>';
+            }
         }
 
         function renderVIPOption() {
@@ -1337,33 +1367,22 @@
             });
         }
 
-        // Listener for payment request status changes
-        function listenForPaymentStatus(userId) {
-            if (!firebaseDb || !userId) return;
-            firebaseDb.ref('payment_requests').orderByChild('userId').equalTo(userId).on('child_changed', async (snap) => {
-                const req = snap.val();
-                const requestId = snap.key;
-                let histIndex = state.withdrawalHistory.findIndex(h => h.id === requestId);
-                if (histIndex === -1) return;
-
-                const oldStatus = state.withdrawalHistory[histIndex].status;
-                const newStatus = req.status.charAt(0).toUpperCase() + req.status.slice(1);
-                state.withdrawalHistory[histIndex].status = newStatus;
-
-                if (req.status === 'approved' && oldStatus.toLowerCase() !== 'approved') {
-                    state.totalEarning -= req.amount;
-                    await firebaseDb.ref(`users/${userId}/totalEarning`).set(state.totalEarning);
-                    safeTgAlert(`Congratulations! Your withdrawal of ৳${req.amount} has been approved and processed.`);
+        // Listener for payment request status updates
+        function listenForPaymentStatus() {
+            if (!firebaseDb || !tg || !tg.initDataUnsafe) return;
+            const userId = tg.initDataUnsafe.user.id;
+            firebaseDb.ref(`payment_requests`).orderByChild('userId').equalTo(userId).on('child_changed', (snapshot) => {
+                const item = snapshot.val();
+                const status = item.status;
+                if (status === 'approved') {
+                    safeTgAlert('অভিনন্দন! আপনার উত্তোলন অনুমোদিত হয়েছে। অর্থ শীঘ্রই আপনার অ্যাকাউন্টে জমা হবে।');
                     safeTgAction(tg => tg.HapticFeedback.notificationOccurred('success'));
-                } else if (req.status === 'rejected' && oldStatus.toLowerCase() !== 'rejected') {
-                    safeTgAlert('Your withdrawal request has been rejected. Please contact support.');
+                    // Deduct from balance if needed, but admin already does it
+                    renderHistory(); // Refresh history
+                } else if (status === 'rejected') {
+                    safeTgAlert('দুঃখিত, আপনার উত্তোলন অনুরোধ প্রত্যাখ্যাত হয়েছে। সমস্যার জন্য সাপোর্টে যোগাযোগ করুন।');
                     safeTgAction(tg => tg.HapticFeedback.notificationOccurred('error'));
-                }
-
-                saveState();
-                updateUI();
-                if (document.getElementById('historyModal').style.display === 'flex') {
-                    renderHistory();
+                    renderHistory(); // Refresh history
                 }
             });
         }
@@ -1479,31 +1498,6 @@
                     if (refBalSnap.exists()) {
                         state.referralBalance = refBalSnap.val();
                     }
-
-                    // Load withdrawal history from Firebase payment_requests
-                    firebaseDb.ref('payment_requests').orderByChild('userId').equalTo(currentUserId).once('value', (snap) => {
-                        state.withdrawalHistory = [];
-                        if (snap.exists()) {
-                            snap.forEach((child) => {
-                                const req = child.val();
-                                const status = req.status.charAt(0).toUpperCase() + req.status.slice(1);
-                                state.withdrawalHistory.push({
-                                    id: child.key,
-                                    method: req.method,
-                                    number: req.txid || 'N/A',
-                                    amount: req.amount,
-                                    date: req.timestamp,
-                                    status: status
-                                });
-                            });
-                            // Sort by date descending
-                            state.withdrawalHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
-                        }
-                        saveState();
-                    });
-
-                    // Set up listener for payment status changes
-                    listenForPaymentStatus(currentUserId);
                 }
 
                 const isNewUser = !(localStorage.getItem('userIdentified'));
@@ -1515,7 +1509,10 @@
                 await listenForVIPStatus();
                 listenForAdminBalance();
                 listenForAdminDeduction();
+                listenForPaymentStatus();
                 
+                setInterval(checkPendingWithdrawals, 60 * 1000);
+
                 const user = tg ? tg.initDataUnsafe?.user : { first_name: 'User', photo_url: null };
                 if (user?.first_name) {
                     let greetingText = `Welcome, ${escapeHTML(user.first_name)}!`;
