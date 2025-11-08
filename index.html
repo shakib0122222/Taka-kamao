@@ -245,6 +245,23 @@
         .history-status.rejected { color: #dc3545; background-color: rgba(220, 53, 69, 0.1); }
         .no-history { text-align: center; padding: 40px 20px; color: var(--text-light); }
 
+        #history-list {
+            max-height: 50vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+        }
+        #history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #history-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinner { border: 2px solid #f3f3f3; border-top: 2px solid var(--secondary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
@@ -972,7 +989,7 @@
                     number: item.txid,
                     amount: item.amount,
                     date: item.timestamp,
-                    status: item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                    status: item.status
                 })).sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 if (history.length === 0) {
@@ -980,11 +997,19 @@
                     return;
                 }
 
-                allDOMElements.historyListEl.innerHTML = history.map(item => `
+                allDOMElements.historyListEl.innerHTML = history.map(item => {
+                    let displayStatus = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                    let statusClass = item.status.toLowerCase();
+                    if (item.status === 'approved') {
+                        displayStatus = 'Success';
+                        statusClass = 'success';
+                    }
+                    return `
                     <div class="history-item">
                         <div class="history-details"><span class="method-number">${escapeHTML(item.method)} - ${escapeHTML(item.number)}</span><span class="date">${new Date(item.date).toLocaleString()}</span></div>
-                        <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${item.status.toLowerCase()}">${item.status}</div></div>
-                    </div>`).join('');
+                        <div class="history-amount"><span>৳${item.amount.toFixed(2)}</span><div class="history-status ${statusClass}">${displayStatus}</div></div>
+                    </div>`;
+                }).join('');
             } catch (e) {
                 console.error("Error loading history:", e);
                 allDOMElements.historyListEl.innerHTML = '<p class="no-history">Error loading history.</p>';
