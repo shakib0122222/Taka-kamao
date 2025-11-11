@@ -83,16 +83,32 @@
             position: relative; 
             cursor: pointer; 
             font-size: 20px; 
-            color: var(--danger);
+            color: var(--text-light); 
             transition: color 0.2s; 
         }
         .notification-bell:hover { color: var(--primary-color); }
+        .notification-bell.unseen {
+            animation: ring 2s infinite;
+        }
+        @keyframes ring {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(10deg); }
+            20% { transform: rotate(-10deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+            60% { transform: rotate(-10deg); }
+            70% { transform: rotate(10deg); }
+            80% { transform: rotate(-10deg); }
+            90% { transform: rotate(10deg); }
+            100% { transform: rotate(0deg); }
+        }
         .badge { 
             position: absolute; 
             top: -5px; 
             right: -5px; 
-            background: var(--danger); 
-            color: #FF0000; 
+            background: #ff4444; 
+            color: white; 
             border-radius: 50%; 
             width: 18px; 
             height: 18px; 
@@ -481,7 +497,7 @@
             <h1 id="greeting">Welcome!</h1>
             <div class="notification-bell" onclick="showNotificationModal()">
                 <i class="fa-solid fa-bell"></i>
-                <span class="badge" id="notification-badge" style="display: none;">!</span>
+                <span class="badge" id="notification-badge" style="display: none;">1</span>
             </div>
         </div>
         <div class="balance-card"><h3>Your Balance</h3><div class="amount" id="total-earning">৳0.00</div></div>
@@ -679,11 +695,12 @@
         // --- MAIN APP LOGIC ---
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
-        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0, unreadNotes: 0, lastKnownNote: '' };
+        let state = { totalEarning: 0.0, referralBalance: 0.0, adCount: 0, adsWatchedToday: 0, lastAdWatchedDate: null, cooldownUntil: null, weeklyActivity: [0, 0, 0, 0, 0, 0, 0], withdrawalHistory: [], completedBonusTasks: [], rewardedQualifiedReferrals: 0, originalUserId: null, referralCount: 0, referred_by: null, isVIP: false, vipPackage: null, vipExpiry: null, vipRequested: false, vipRequestTxId: null, vipDaysLeft: 0 };
         const dbName = 'AdBotAppDB'; let db;
         let firebaseApp, firebaseDb;
         let vipCountdownInterval;
         let selectedPackage = null;
+        let hasNewNote = false;
 
         const allDOMElements = { 
             preloader: document.getElementById('preloader'), preloaderPercentage: document.getElementById('preloader-percentage'), preloaderFooter: document.getElementById('preloader-footer'),
@@ -694,7 +711,8 @@
             copyLinkButton: document.getElementById('copy-link-button'), shareLinkButton: document.getElementById('share-link-button'), historyListEl: document.getElementById('history-list'), 
             bonusTasksListEl: document.getElementById('bonus-tasks-list'), minWithdrawText: document.getElementById('min-withdraw-text'), referralRequirementNote: document.getElementById('referral-requirement-note'),
             welcomeTitle: document.getElementById('welcome-title'), welcomeMessage: document.getElementById('welcome-message'), referralBalanceText: document.getElementById('referral-balance-text'), addToMainBalance: document.getElementById('add-to-main-balance'),
-            notificationBadge: document.getElementById('notification-badge'), notificationContent: document.getElementById('notification-content')
+            notificationBadge: document.getElementById('notification-badge'), notificationContent: document.getElementById('notification-content'),
+            notificationBell: document.querySelector('.notification-bell')
         };
         
         function calculateDaysLeft(expiryDate) {
@@ -708,10 +726,21 @@
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             return diffDays;
         }
+
+        function calculateTimeAgo(timestamp) {
+            const now = new Date();
+            const then = new Date(timestamp);
+            const diffMs = now - then;
+            const minutes = Math.floor(diffMs / (1000 * 60));
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes} minutes ago`;
+            const hours = Math.floor(minutes / 60);
+            return `${hours} hours ago`;
+        }
         
         function initDB() { return new Promise((resolve) => { try { const request = indexedDB.open(dbName, 3); request.onerror = (e) => { console.error("DB Error:", e); resolve(); }; request.onsuccess = event => { db = event.target.result; resolve(); }; request.onupgradeneeded = event => { let db = event.target.result; if (!db.objectStoreNames.contains('userState')) db.createObjectStore('userState', { keyPath: 'id' }); }; } catch (e) { resolve(); } }); }
         function saveState() { if (!db) return; const transaction = db.transaction(['userState'], 'readwrite'); transaction.objectStore('userState').put({ id: 'currentUser', ...state }); }
-        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; if (!state.unreadNotes) state.unreadNotes = 0; if (!state.lastKnownNote) state.lastKnownNote = ''; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
+        function loadState() { return new Promise(resolve => { if (!db) { resolve(); return; } const request = db.transaction(['userState'], 'readonly').objectStore('userState').get('currentUser'); request.onsuccess = () => { if (request.result) { state = { ...state, ...request.result }; if (!state.completedBonusTasks) state.completedBonusTasks = []; if (!state.rewardedQualifiedReferrals) state.rewardedQualifiedReferrals = 0; if(!state.originalUserId) state.originalUserId = null; if(!state.referralCount) state.referralCount = 0; if (!state.referralBalance) state.referralBalance = 0.0; if (!state.referred_by) state.referred_by = null; if (!state.isVIP) state.isVIP = false; if (!state.vipPackage) state.vipPackage = null; if (!state.vipExpiry) state.vipExpiry = null; if (!state.vipRequested) state.vipRequested = false; if (!state.vipRequestTxId) state.vipRequestTxId = null; if (!state.vipDaysLeft) state.vipDaysLeft = 0; } const today = new Date().toLocaleDateString(); if (state.lastAdWatchedDate !== today) { state.adsWatchedToday = 0; state.lastAdWatchedDate = today; } resolve(); }; request.onerror = () => resolve(); }); }
 
         // Function to sync user data to Firebase
         async function syncUserToFirebase(userId, userData) {
@@ -766,14 +795,6 @@
             if (state.cooldownUntil && new Date() >= new Date(state.cooldownUntil)) { state.cooldownUntil = null; saveState(); }
             allDOMElements.totalEarningEl.textContent = `৳${state.totalEarning.toFixed(2)}`;
             allDOMElements.adCountEl.textContent = state.adCount;
-
-            // Update notification badge
-            if (state.unreadNotes > 0) {
-                allDOMElements.notificationBadge.style.display = 'flex';
-                allDOMElements.notificationBadge.textContent = state.unreadNotes > 99 ? '99+' : state.unreadNotes.toString();
-            } else {
-                allDOMElements.notificationBadge.style.display = 'none';
-            }
 
             // Sync to Firebase after UI update
             const userId = tg ? tg.initDataUnsafe.user.id : null;
@@ -1466,17 +1487,19 @@
             if (!userId || !firebaseDb) return;
             const noteRef = firebaseDb.ref(`users/${userId}/adminNote`);
             noteRef.on('value', (snapshot) => {
-                const note = snapshot.val() || '';
-                if (note && note !== state.lastKnownNote) {
-                    state.unreadNotes += 1;
-                    state.lastKnownNote = note;
-                    saveState();
+                const noteData = snapshot.val();
+                const note = noteData ? noteData.note || '' : '';
+                const timestamp = noteData ? noteData.timestamp || null : null;
+                if (note && !hasNewNote) {
+                    hasNewNote = true;
                     allDOMElements.notificationBadge.style.display = 'flex';
-                    allDOMElements.notificationBadge.textContent = state.unreadNotes > 99 ? '99+' : state.unreadNotes.toString();
+                    allDOMElements.notificationBadge.textContent = '1';
+                    allDOMElements.notificationBell.classList.add('unseen');
                 }
                 const content = allDOMElements.notificationContent;
                 if (note) {
-                    content.innerHTML = `<div class="user-note" style="font-size: 14px; color: var(--text-color); text-align: left; background: rgba(var(--primary-color-rgb), 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-color);"><i class="fa-solid fa-sticky-note" style="margin-right: 8px; color: var(--primary-color);"></i> Admin Note: ${escapeHTML(note)}</div>`;
+                    const timeAgo = timestamp ? calculateTimeAgo(timestamp) : 'Unknown time';
+                    content.innerHTML = `<div class="user-note" style="font-size: 14px; color: var(--text-color); text-align: left; background: rgba(var(--primary-color-rgb), 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary-color);"><i class="fa-solid fa-sticky-note" style="margin-right: 8px; color: var(--primary-color);"></i> Admin Note: ${escapeHTML(note)}<br><small style="color: var(--text-light);">${timeAgo}</small></div>`;
                 } else {
                     content.innerHTML = '<p>No notifications yet.</p>';
                 }
@@ -1484,9 +1507,9 @@
         }
 
         function showNotificationModal() {
-            state.unreadNotes = 0;
-            saveState();
+            hasNewNote = false;
             allDOMElements.notificationBadge.style.display = 'none';
+            allDOMElements.notificationBell.classList.remove('unseen');
             showModal('notificationModal');
         }
 
